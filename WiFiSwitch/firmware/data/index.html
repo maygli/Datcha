@@ -1,0 +1,49 @@
+<style>
+    .base {
+      zoom: 1;
+    }
+</style>
+<script>
+        async function onButtonClicked(){
+            let aSwitchState = {state:"on"};
+            let aButton = document.getElementById("button_image");
+            let aSrc = aButton.getAttribute("src");
+            if( aSrc == "images/lamp_on.png" ){
+              aSrc = "images/lamp_off.png";
+              aSwitchState.state = "off";
+            }
+            else{
+              aSrc = "images/lamp_on.png";
+            }
+//            aButton.setAttribute("src",aSrc);
+            let response = await fetch("switch_control", {
+                               headers: {
+                                    'Content-Type': 'application/json'
+                               },
+                               method: "POST",
+                               body: JSON.stringify(aSwitchState)
+                           });
+         }
+         async function onTimer(){
+           let response = await fetch("switch_state");
+           if (response.ok) { 
+             let aBoardState = await response.json();
+             let aButton = document.getElementById("button_image");
+             if( aBoardState.state == "on" ){
+               aButton.setAttribute("src","images/lamp_on.png");
+             }  
+             else{
+               aButton.setAttribute("src","images/lamp_off.png");
+             } 
+           }                                       
+         }
+
+         function onLoad(){
+           setInterval(onTimer, 1000);
+         }
+</script>
+<body onload="onLoad()">
+<div>
+  <img class="base" id="button_image" src="images/lamp_on.png" onclick="onButtonClicked()"></img>
+<div>
+</body>
