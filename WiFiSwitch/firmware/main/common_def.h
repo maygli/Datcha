@@ -34,3 +34,7 @@
 #define FIRMWARE_FILE_NAME      "firmware.bin"
 
 #define UPLOAD_COMPLETE_DELAY   1000
+
+#define MAX_SSID_SIZE           32
+#define MAX_PASSWORD_SIZE       32
+#define IP_SIZE                 4  

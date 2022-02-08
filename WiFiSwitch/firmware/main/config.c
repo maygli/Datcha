@@ -26,5 +26,5 @@
 #include "common_def.h"
 #include "config.h"
 
-static const char TAG[]="config";
+//static const char TAG[]="config";
 
