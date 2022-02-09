@@ -25,16 +25,50 @@
 #define MAX_PATH_SIZE           256
 
 #define INT_FLASH_BASE_PATH 	"/int"
-#define HTML_DIR  		INT_FLASH_BASE_PATH"/html"
+#define HTML_DIR  		        INT_FLASH_BASE_PATH"/html"
 #define UPLOAD_DIR              INT_FLASH_BASE_PATH"/upload"
 #define COMPLETE_FILE_NAME      "complete"
 #define COMPLETE_FILE_PATH      UPLOAD_DIR"/"COMPLETE_FILE_NAME
 #define TAR_EXT                 ".tar"
-#define CONFIG_FILE_NAME	"board_config.json"
+#define CONFIG_FILE_NAME	    "board_config.json"
 #define FIRMWARE_FILE_NAME      "firmware.bin"
+#define FIRMWARE_FILE_PATH      HTML_DIR"/"FIRMWARE_FILE_NAME
 
 #define UPLOAD_COMPLETE_DELAY   1000
 
-#define MAX_SSID_SIZE           32
-#define MAX_PASSWORD_SIZE       32
+//This values should be set according IDF library
+#define MAX_SSID_SIZE           31
+#define MAX_PASSWORD_SIZE       31
+
 #define IP_SIZE                 4  
+#define AP_MAX_STA_CONN         4
+
+#define DEFAULT_ST_SSID         "MaygliHome"
+#define DEFAULT_ST_PASSWORD     "firebird"
+#define ST_IP_0                 192
+#define ST_IP_1                 168
+#define ST_IP_2                 0
+#define ST_IP_3                 100
+#define ST_MASK_0               255
+#define ST_MASK_1               255
+#define ST_MASK_2               255
+#define ST_MASK_3               0
+#define ST_GATE_0               192
+#define ST_GATE_1               168
+#define ST_GATE_2               0
+#define ST_GATE_3               1
+
+#define DEFAULT_AP_SSID         "Datcha"
+#define DEFAULT_AP_PASSWORD     "11111111"
+#define AP_IP_0                 192
+#define AP_IP_1                 168
+#define AP_IP_2                 1
+#define AP_IP_3                 54
+#define AP_MASK_0               255
+#define AP_MASK_1               255
+#define AP_MASK_2               255
+#define AP_MASK_3               0
+#define AP_GATE_0               192
+#define AP_GATE_1               168
+#define AP_GATE_2               1
+#define AP_GATE_3               54

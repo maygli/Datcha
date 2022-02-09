@@ -44,6 +44,9 @@
 
 static const char *TAG="APP";
 
+static BoardConfig  s_BoardConfig;
+static HTTPServer   s_Server;
+
 void test_fat()
 {
     ESP_LOGI(TAG, "Opening file");
@@ -96,26 +99,25 @@ void initInternalFlash()
 //    test_fat();
 }
 
-HTTPServer aServer;
-
 void app_main()
 {
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    aServer.m_SwitchQueue = xQueueCreate(10, sizeof(SwitchCommand));
+    s_Server.m_SwitchQueue = xQueueCreate(10, sizeof(SwitchCommand));
 
-    xTaskCreate(switchBoardTask, "switch_task", 4096, aServer.m_SwitchQueue, 10, NULL);
+    xTaskCreate(switchBoardTask, "switch_task", 4096, s_Server.m_SwitchQueue, 10, NULL);
 
     SwitchCommand aCmd;
     aCmd.m_Command = CC_SWITCH_ON;
     aCmd.m_Parameter = 0; 
 
-    xQueueSend(aServer.m_SwitchQueue, &aCmd, NULL);
+    xQueueSend(s_Server.m_SwitchQueue, &aCmd, NULL);
 
     initInternalFlash();
     UPD_Process();
+    ESP_ERROR_CHECK(CFG_Init(&s_BoardConfig));
 
-    ESP_ERROR_CHECK(WiFi_Connect(&aServer));
+    ESP_ERROR_CHECK(WiFi_Connect(&s_Server, &s_BoardConfig));
 }

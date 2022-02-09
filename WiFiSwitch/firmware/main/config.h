@@ -44,7 +44,9 @@ typedef struct _BoardConfig{
   ConnectionInfo  m_StConn;
 } BoardConfig;
 
-esp_err_t CFG_Init();
+esp_err_t CFG_Init(BoardConfig* theConfig);
+ConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig);
+ConnectionInfo* CFG_GetAPConnection(BoardConfig* theConfig);
 
 #ifdef __cplusplus
 }
