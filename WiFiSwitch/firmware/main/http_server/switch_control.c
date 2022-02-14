@@ -50,7 +50,7 @@ char* http_getJSONParameterValue(cJSON* theJson, char* theParam)
 esp_err_t HTTP_GetSwitchState(httpd_req_t *req)
 {
   char anOutBuffer[OUT_BUFFER_SIZE];
-  SwitchState aState = getBoardState();
+  SwitchState aState = SWB_getBoardState();
   if( aState == SS_ON ){
     sprintf(anOutBuffer,"{\"state\":\"%s\"}", ON_NAME);
   }
@@ -79,7 +79,7 @@ esp_err_t HTTP_SwitchControl(httpd_req_t *req)
         if( strcmp(aStateVal, ON_NAME) == 0 ){
           aState = SS_ON;
         }
-        setBoardState(aState);
+        SWB_setBoardState(aState);
       }
       httpd_resp_send_chunk(req, NULL, 0);    
       aRes = ESP_OK;

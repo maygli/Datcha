@@ -32,13 +32,13 @@ typedef enum _SwitchMode{ SM_NORMAL, SM_FLASh} SwitchMode;
 extern "C" {
 #endif
 
-void SWB_switchBoardTask(void *arg);
-SwitchState getBoardState();
-void setBoardState(SwitchState theState);
-void setOnBrightness(uint8_t theVal);
-void setOffBrightness(uint8_t theVal);
-void soundOn(bool theVal);
-void setStyle(uint8_t theStyle);
+void        SWB_switchBoardTask(void *arg);
+SwitchState SWB_getBoardState();
+void        SWB_setBoardState(SwitchState theState);
+void        SWB_setOnBrightness(uint8_t theVal);
+void        SWB_setOffBrightness(uint8_t theVal);
+void        SWB_soundOn(bool theVal);
+void        SWB_setStyle(uint8_t theStyle);
 
 #ifdef __cplusplus
 }

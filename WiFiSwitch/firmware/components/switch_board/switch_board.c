@@ -108,12 +108,12 @@ void SWB_switchBoardTask(void *arg)
     }
 }
 
-SwitchState getBoardState()
+SwitchState SWB_getBoardState()
 {
   return getBoardStateInt(&aBoard);
 }
 
-void setBoardState(SwitchState theState)
+void SWB_setBoardState(SwitchState theState)
 {
     SwitchCommand aCmd;
     aCmd.m_Command = CC_SWITCH_OFF;
@@ -124,7 +124,7 @@ void setBoardState(SwitchState theState)
     xQueueSend(aBoard.m_Queue, &aCmd, NULL);
 }
 
-void setOnBrightness(uint8_t theVal)
+void SWB_setOnBrightness(uint8_t theVal)
 {
     SwitchCommand aCmd;
     aCmd.m_Command = CC_ON_LED_BR;
@@ -132,7 +132,7 @@ void setOnBrightness(uint8_t theVal)
     xQueueSend(aBoard.m_Queue, &aCmd, NULL);
 }
 
-void setOffBrightness(uint8_t theVal)
+void SWB_setOffBrightness(uint8_t theVal)
 {
     SwitchCommand aCmd;
     aCmd.m_Command = CC_OFF_LED_BR;
@@ -140,7 +140,7 @@ void setOffBrightness(uint8_t theVal)
     xQueueSend(aBoard.m_Queue, &aCmd, NULL);
 }
 
-void soundOn(bool theVal)
+void SWB_soundOn(bool theVal)
 {
     SwitchCommand aCmd;
     aCmd.m_Command = CC_SOUND_ON;
@@ -148,7 +148,7 @@ void soundOn(bool theVal)
     xQueueSend(aBoard.m_Queue, &aCmd, NULL);
 }
 
-void setStyle(uint8_t theStyle)
+void SWB_setStyle(uint8_t theStyle)
 {
     SwitchCommand aCmd;
     aCmd.m_Command = CC_STYLE;

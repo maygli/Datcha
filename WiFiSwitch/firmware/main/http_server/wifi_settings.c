@@ -20,16 +20,46 @@
  * IN THE SOFTWARE.
  */
 
+#include <esp_log.h>
+
+#include "http_server.h"
+#include "http_utils.h"
 #include "wifi_settings.h"
+#include "../config_wifi.h"
+
+#define MAX_WIFI_JSON_SIZE 768
+
+static const char TAG[] = "wifi_settings";
 
 esp_err_t HTTP_SetWiFiSettings(httpd_req_t *req)
 {
-    httpd_resp_send_chunk(req, NULL, 0);    
-    return ESP_OK;
+    esp_err_t aRetVal;
+    HTTPServer* aServer = (HTTPServer*)req->user_ctx;
+    BoardConfig* aConfig = aServer->m_BoardConfig;
+    cJSON* aRootJson = HTTP_ReceiveJSON(req);
+    if( aRootJson == NULL ){
+        ESP_LOGE(TAG,"HTTP_SetWiFiSettings::Can't parse JSON file");
+        return ESP_FAIL;
+    }
+    aRetVal = CFG_WiFiParseSettings(&aConfig->m_WiFiConfig, aRootJson, true);
+    if( aRetVal != ESP_OK ){
+        httpd_resp_send_500(req);
+    }
+    else{
+        httpd_resp_send_chunk(req, NULL, 0);    
+    }
+    cJSON_Delete(aRootJson); 
+    return aRetVal;
 }
 
 esp_err_t HTTP_GetWiFiSettings(httpd_req_t *req)
 {
+    char aRes[MAX_WIFI_JSON_SIZE];
+    HTTPServer* aServer = (HTTPServer*)req->user_ctx;
+    BoardConfig* aConfig = aServer->m_BoardConfig;
+
+    CFG_WiFiGetSettingsString(&aConfig->m_WiFiConfig,aRes);
+    httpd_resp_send_chunk(req, aRes, strlen(aRes));    
     httpd_resp_send_chunk(req, NULL, 0);    
     return ESP_OK;
 }

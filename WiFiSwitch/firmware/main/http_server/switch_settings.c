@@ -22,10 +22,14 @@
 
 #include <esp_log.h>
 
+#include "../config_switch.h"
+
 #include "switch_settings.h"
 
 #include "http_server.h"
 #include "http_utils.h"
+
+#define MAX_SWITCH_JSON_SIZE 128
 
 static const char TAG[]="http_switch";
 
@@ -39,7 +43,7 @@ esp_err_t HTTP_SetSwitchSettings(httpd_req_t *req)
         ESP_LOGE(TAG,"HTTP_SetSwitchSettings::Can't parse JSON file");
         return ESP_FAIL;
     }
-    aRetVal = CFG_ParseSwitchSettings(aConfig, aRootJson);
+    aRetVal = CFG_SwitchParseSettings(&aConfig->m_SwitchConfig, aRootJson);
     if( aRetVal != ESP_OK ){
         httpd_resp_send_500(req);
     }
@@ -54,7 +58,11 @@ esp_err_t HTTP_SetSwitchSettings(httpd_req_t *req)
 
 esp_err_t HTTP_GetSwitchSettings(httpd_req_t *req)
 {
-    char aRes[] = "{\"on_brightness\": 47,\"off_brightness\": 36,\"sound\": \"off\",\"style\": 1,}";
+    char aRes[MAX_SWITCH_JSON_SIZE];
+    HTTPServer* aServer = (HTTPServer*)req->user_ctx;
+    BoardConfig* aConfig = aServer->m_BoardConfig;
+
+    CFG_SwitchGetSettingsString(&aConfig->m_SwitchConfig,aRes);
     httpd_resp_send_chunk(req, aRes, strlen(aRes));    
     httpd_resp_send_chunk(req, NULL, 0);    
     return ESP_OK;

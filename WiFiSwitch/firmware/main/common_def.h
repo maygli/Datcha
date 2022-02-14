@@ -22,6 +22,9 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #define BOARD_NAME "Datcha WiFiSwitch"
 #define BOARD_HW_VERSION "v1.0.0"
 #define BOARD_FW_VERSION "v0.0.1"
@@ -52,7 +55,7 @@
 #define AP_MAX_STA_CONN         4
 
 #define DEFAULT_ST_SSID         "MaygliHome"
-#define DEFAULT_ST_PASSWORD     "firebird"
+#define DEFAULT_ST_PASSWORD     "22222222"
 #define ST_IP_0                 192
 #define ST_IP_1                 168
 #define ST_IP_2                 0
@@ -65,6 +68,7 @@
 #define ST_GATE_1               168
 #define ST_GATE_2               0
 #define ST_GATE_3               1
+#define ST_ATTEMPTS_COUNT       7
 
 #define DEFAULT_AP_SSID         "Datcha"
 #define DEFAULT_AP_PASSWORD     "11111111"
@@ -80,3 +84,8 @@
 #define AP_GATE_1               168
 #define AP_GATE_2               1
 #define AP_GATE_3               54
+
+#define DEFAUL_ON_BRIGNESS      99
+#define DEFAUL_OFF_BRIGNESS     95
+#define DEFAUL_SWITCH_SOUND     true
+#define DEFAUL_SWITCH_STYLE     0

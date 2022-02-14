@@ -26,22 +26,25 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include <esp_err.h>
 
 #include <cJSON.h>
 
 #include "common_def.h"
-#include "config_switch.h"
-#include "config_wifi.h"
 
-typedef struct _BoardConfig{
-  WiFiConfig      m_WiFiConfig;
-  SwitchConfig    m_SwitchConfig;
-} BoardConfig;
+typedef struct _SwitchConfig{
+  uint8_t m_OnBrightness;
+  uint8_t m_OffBrightness;
+  bool    m_IsSoundOn;
+  int     m_Style;
+} SwitchConfig;
 
-esp_err_t CFG_Init(BoardConfig* theConfig);
-ConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig);
-ConnectionInfo* CFG_GetAPConnection(BoardConfig* theConfig);
+void CFG_SwitchInit(SwitchConfig* theConfig);
+esp_err_t CFG_SwitchParseSettings(SwitchConfig* theConfig, cJSON* theJSON);
+esp_err_t CFG_SwitchGetSettingsString(SwitchConfig* theConfig, char* theBuffer);
 
 #ifdef __cplusplus
 }

@@ -26,22 +26,34 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include <esp_err.h>
 
 #include <cJSON.h>
 
 #include "common_def.h"
-#include "config_switch.h"
-#include "config_wifi.h"
 
-typedef struct _BoardConfig{
-  WiFiConfig      m_WiFiConfig;
-  SwitchConfig    m_SwitchConfig;
-} BoardConfig;
+typedef struct _ConnectionInfo{
+  bool      m_IsEnabled;
+  char      m_SSID[MAX_SSID_SIZE];
+  char      m_Password[MAX_PASSWORD_SIZE];
+  bool      m_IsFixedIP;
+  uint8_t   m_Ip[IP_SIZE];
+  uint8_t   m_NetMask[IP_SIZE];  
+  uint8_t   m_Gateway[IP_SIZE];  
+} ConnectionInfo;
 
-esp_err_t CFG_Init(BoardConfig* theConfig);
-ConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig);
-ConnectionInfo* CFG_GetAPConnection(BoardConfig* theConfig);
+typedef struct _WiFiConfig{
+  ConnectionInfo  m_APConn;
+  ConnectionInfo  m_StConn;
+  uint8_t         m_StAttemptsCount;
+} WiFiConfig;
+
+void CFG_WiFiInit(WiFiConfig* theConfig);
+esp_err_t CFG_WiFiParseSettings(WiFiConfig* theConfig, cJSON* theJSON, bool isFullSet);
+esp_err_t CFG_WiFiGetSettingsString(WiFiConfig* theConfig, char* theBuffer);
 
 #ifdef __cplusplus
 }
