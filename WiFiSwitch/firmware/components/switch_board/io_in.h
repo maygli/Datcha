@@ -32,6 +32,7 @@ typedef struct _GPIOIn{
 /* Pin number */    
     uint32_t        m_Pin;
     xQueueHandle    m_Queue;
+    bool            m_isReal;
 } GPIOIn;
 
 #ifdef __cplusplus

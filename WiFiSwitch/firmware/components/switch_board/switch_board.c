@@ -23,10 +23,13 @@
  * IN THE SOFTWARE.
  */
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/timers.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/queue.h>
+#include <freertos/timers.h>
+#include <semphr.h>
+
+#include <esp_log.h>
 
 #include "board_config.h"
 #include "led.h"
@@ -42,7 +45,116 @@
 #define PWM_PERIOD 1000
 #define UPDATE_PERIOD 20
 
+typedef struct _SwitchBoard{
+    LED         	    m_OnLED;
+    LED         	    m_OffLED;
+    Buzzer      	    m_Buzzer;
+    GPIOOut     	    m_Relay;
+    GPIOIn      	    m_Input;
+    SwitchState 	    m_State;
+    bool                m_isSoundOn;
+    xSemaphoreHandle 	m_StateMutex;
+    xQueueHandle        m_Queue;
+} SwitchBoard;
+
 static SwitchBoard  aBoard;
+
+SwitchState getBoardStateInt(SwitchBoard* theBoard);
+void setBoardStateInt(SwitchBoard* theBoard, SwitchState theState);
+void initSwitchBoard(SwitchBoard* theBoardx);
+void offSwitch(SwitchBoard* theBoard);
+void onSwitch(SwitchBoard* theBoard);
+
+void SWB_switchBoardTask(void *arg)
+{
+    aBoard.m_Queue = xQueueCreate(10, sizeof(SwitchCommand));
+    initSwitchBoard(&aBoard);
+    SwitchCommand aCmd;
+    offSwitch(&aBoard);
+
+    for(;;){
+        if (xQueueReceive(aBoard.m_Queue, &aCmd, portMAX_DELAY)) {
+            switch(aCmd.m_Command){
+            case CC_SWITCH_OFF:
+              ESP_LOGI("switch", "Switch. Off called");
+              offSwitch(&aBoard);
+              break;
+            case CC_SWITCH_ON:
+              ESP_LOGI("switch", "Switch. On called");
+              onSwitch(&aBoard);
+              break;
+            case CC_SWITCH_REV:
+              ESP_LOGI("switch", "Switch. Revert called");
+              if( aBoard.m_State == SS_ON ){
+                offSwitch(&aBoard);
+              }
+              else{
+                onSwitch(&aBoard);
+              }
+              break;
+            case CC_SOUND_ON:
+              aBoard.m_isSoundOn = (bool)aCmd.m_Parameter;
+              enableBuzzer(&aBoard.m_Buzzer, aBoard.m_isSoundOn);
+              break;
+            case CC_OFF_LED_BR:
+              setBrightness(&aBoard.m_OffLED, aCmd.m_Parameter);
+              break;
+            case CC_ON_LED_BR:
+              setBrightness(&aBoard.m_OnLED, aCmd.m_Parameter);
+              break;
+            }
+            vTaskDelay(100 / portTICK_RATE_MS);
+        }
+    }
+}
+
+SwitchState getBoardState()
+{
+  return getBoardStateInt(&aBoard);
+}
+
+void setBoardState(SwitchState theState)
+{
+    SwitchCommand aCmd;
+    aCmd.m_Command = CC_SWITCH_OFF;
+    if( theState == SS_ON ){
+        aCmd.m_Command = CC_SWITCH_ON;
+    }
+    aCmd.m_Parameter = 0; 
+    xQueueSend(aBoard.m_Queue, &aCmd, NULL);
+}
+
+void setOnBrightness(uint8_t theVal)
+{
+    SwitchCommand aCmd;
+    aCmd.m_Command = CC_ON_LED_BR;
+    aCmd.m_Parameter = theVal; 
+    xQueueSend(aBoard.m_Queue, &aCmd, NULL);
+}
+
+void setOffBrightness(uint8_t theVal)
+{
+    SwitchCommand aCmd;
+    aCmd.m_Command = CC_OFF_LED_BR;
+    aCmd.m_Parameter = theVal; 
+    xQueueSend(aBoard.m_Queue, &aCmd, NULL);
+}
+
+void soundOn(bool theVal)
+{
+    SwitchCommand aCmd;
+    aCmd.m_Command = CC_SOUND_ON;
+    aCmd.m_Parameter = theVal;
+    xQueueSend(aBoard.m_Queue, &aCmd, NULL);
+}
+
+void setStyle(uint8_t theStyle)
+{
+    SwitchCommand aCmd;
+    aCmd.m_Command = CC_STYLE;
+    aCmd.m_Parameter = theStyle;
+    xQueueSend(aBoard.m_Queue, &aCmd, NULL);
+}
 
 void boardUpdate( TimerHandle_t xTimer )
 {
@@ -52,7 +164,7 @@ void boardUpdate( TimerHandle_t xTimer )
     updateBuzzer(&aBoard.m_Buzzer); 
 }
 
-void setBoardState(SwitchBoard* theBoard, SwitchState theState)
+void setBoardStateInt(SwitchBoard* theBoard, SwitchState theState)
 {
     if( theBoard->m_StateMutex ){
         if( xSemaphoreTake( theBoard->m_StateMutex, portMAX_DELAY ) == pdTRUE )
@@ -76,15 +188,32 @@ SwitchState getBoardStateInt(SwitchBoard* theBoard)
     return aRes;
 }
 
-SwitchState getBoardState()
+void onSwitch(SwitchBoard* theBoard)
 {
-  return getBoardStateInt(&aBoard);
+    setBoardStateInt(theBoard, SS_ON);
+    onLED(&theBoard->m_OnLED);
+    offLED(&theBoard->m_OffLED);
+
+    onGPIOOut(&theBoard->m_Relay);
+    if( theBoard->m_isSoundOn )
+        playBuzzer(&theBoard->m_Buzzer);
 }
 
+void offSwitch(SwitchBoard* theBoard)
+{
+    setBoardStateInt(theBoard, SS_OFF);
+    onLED(&theBoard->m_OffLED);
+    offLED(&theBoard->m_OnLED);
 
-void initSwitchBoard(SwitchBoard* theBoard, xQueueHandle theQueue)
+    offGPIOOut(&theBoard->m_Relay);
+    if( theBoard->m_isSoundOn )
+        playBuzzer(&theBoard->m_Buzzer);
+}
+
+void initSwitchBoard(SwitchBoard* theBoard)
 {
     theBoard->m_StateMutex=NULL;
+    theBoard->m_isSoundOn = true;
     //PWM pins
     const uint32_t aPins[LED_COUNT] = {
         PIN_LED_ON,
@@ -112,58 +241,10 @@ void initSwitchBoard(SwitchBoard* theBoard, xQueueHandle theQueue)
     initLED(&theBoard->m_OffLED,1);
     initGPIOOut(&theBoard->m_Relay,PIN_RELAY);
     initBuzzer(&theBoard->m_Buzzer,PIN_BUZER);
-    initGPIOIn(&theBoard->m_Input,PIN_INPUT, theQueue);
+    initGPIOIn(&theBoard->m_Input,PIN_INPUT, aBoard.m_Queue);
 
     TimerHandle_t anUpdTimer = xTimerCreate("timer100ms", pdMS_TO_TICKS(UPDATE_PERIOD), pdTRUE,
                      (void*)0, boardUpdate);
     xTimerStart(anUpdTimer, 0);
 }
 
-void onSwitch(SwitchBoard* theBoard)
-{
-    setBoardState(theBoard, SS_ON);
-    onLED(&theBoard->m_OnLED);
-    offLED(&theBoard->m_OffLED);
-
-    onGPIOOut(&theBoard->m_Relay);
-    playBuzzer(&theBoard->m_Buzzer);
-}
-
-void offSwitch(SwitchBoard* theBoard)
-{
-    setBoardState(theBoard, SS_OFF);
-    onLED(&theBoard->m_OffLED);
-    offLED(&theBoard->m_OnLED);
-
-    offGPIOOut(&theBoard->m_Relay);
-    playBuzzer(&theBoard->m_Buzzer);
-}
-
-void switchBoardTask(void *arg)
-{
-    xQueueHandle aQueue = (xQueueHandle)arg;
-    initSwitchBoard(&aBoard, aQueue);
-    SwitchCommand aCmd;
-    offSwitch(&aBoard);
-
-    for(;;){
-        if (xQueueReceive(aQueue, &aCmd, portMAX_DELAY)) {
-            switch(aCmd.m_Command){
-            case CC_SWITCH_OFF:
-              offSwitch(&aBoard);
-              break;
-            case CC_SWITCH_ON:
-              onSwitch(&aBoard);
-              break;
-            case CC_SWITCH_REV:
-              if( aBoard.m_State == SS_ON ){
-                offSwitch(&aBoard);
-              }
-              else{
-                onSwitch(&aBoard);
-              }              
-            }
-            vTaskDelay(100 / portTICK_RATE_MS);
-        }
-    }
-}

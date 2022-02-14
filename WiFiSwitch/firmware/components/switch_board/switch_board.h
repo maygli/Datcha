@@ -24,31 +24,21 @@
 
 #include <stdint.h>
 
-#include <semphr.h>
-
-#include "led.h"
-#include "buzzer.h"
-#include "io_out.h"
-#include "io_in.h"
-
 typedef enum _SwitchState{ SS_ON, SS_OFF } SwitchState;
+typedef enum _SwitchMode{ SM_NORMAL, SM_FLASh} SwitchMode;
 
-typedef struct _SwitchBoard{
-    LED         	m_OnLED;
-    LED         	m_OffLED;
-    Buzzer      	m_Buzzer;
-    GPIOOut     	m_Relay;
-    GPIOIn      	m_Input;
-    SwitchState 	m_State;
-    xSemaphoreHandle 	m_StateMutex;
-} SwitchBoard;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void switchBoardTask(void *arg);
+void SWB_switchBoardTask(void *arg);
 SwitchState getBoardState();
+void setBoardState(SwitchState theState);
+void setOnBrightness(uint8_t theVal);
+void setOffBrightness(uint8_t theVal);
+void soundOn(bool theVal);
+void setStyle(uint8_t theStyle);
 
 #ifdef __cplusplus
 }

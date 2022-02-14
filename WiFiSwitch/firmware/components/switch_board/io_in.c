@@ -30,16 +30,22 @@
 static void inGPIOIsr(void *arg)
 {
     GPIOIn* aGPIO = (GPIOIn*)arg;
-    SwitchCommand aCmd;
-    aCmd.m_Command = CC_SWITCH_REV;
-    aCmd.m_Parameter = 0; 
-    xQueueSendFromISR(aGPIO->m_Queue, &aCmd, NULL);
+    if( aGPIO->m_isReal ){
+        SwitchCommand aCmd;
+        aCmd.m_Command = CC_SWITCH_REV;
+        aCmd.m_Parameter = 0; 
+        xQueueSendFromISR(aGPIO->m_Queue, &aCmd, NULL);
+    }
+    else{
+        aGPIO->m_isReal = true;
+    }
 }
 
 void initGPIOIn(GPIOIn* theGPIO, uint32_t thePin, xQueueHandle theQueue)
 {
     theGPIO->m_Pin = thePin;
     theGPIO->m_Queue = theQueue;
+    theGPIO->m_isReal = false;
     gpio_config_t aGPIOConf;
     //interrupt of rising edge
     aGPIOConf.intr_type = GPIO_INTR_POSEDGE;

@@ -44,8 +44,16 @@ void updateBuzzer(Buzzer* theBuzzer )
         offGPIOOut(&theBuzzer->m_GPIO);
         return;
     }
-    if( theBuzzer->m_SoundCounter == 0 ){
+    if( theBuzzer->m_SoundCounter < PLAY_TIME ){
         onGPIOOut(&theBuzzer->m_GPIO);
     }
     theBuzzer->m_SoundCounter++;
+}
+
+void enableBuzzer(Buzzer* theBuzzer, bool isEnable)
+{
+    if( !isEnable ){
+        theBuzzer->m_SoundCounter = PLAY_TIME;
+        offGPIOOut(&theBuzzer->m_GPIO);
+    }
 }

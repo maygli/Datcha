@@ -27,9 +27,9 @@
 //Board LED count
 #define LED_COUNT 2
 
-extern const char *TAG;
-
 #ifdef WIFI_SWITCH_V1
+//Maximum supported styles number
+    #define MAX_STYLE   1
 // On LED pin
     #define PIN_LED_ON  5
 // Off LED pin    

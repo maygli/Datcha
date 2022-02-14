@@ -41,6 +41,7 @@ extern "C" {
 void initBuzzer(Buzzer* theBuzzer, uint32_t thePin);
 void playBuzzer(Buzzer* theBuzzer);
 void updateBuzzer(Buzzer* theBuzzer );
+void enableBuzzer(Buzzer* theBuzzer, bool isEnable);
 
 #ifdef __cplusplus
 }
