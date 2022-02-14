@@ -31,7 +31,6 @@
 #include "cJSON.h"
 
 static const char TAG[]="switch_control";
-static SwitchCommand aCmd;
 
 #define STATE_PARAMETER_NAME "state"
 #define OUT_BUFFER_SIZE 128
@@ -73,17 +72,15 @@ esp_err_t HTTP_SwitchControl(httpd_req_t *req)
 
     cJSON* aRootJSON = HTTP_ReceiveJSON(req);
     if( aRootJSON ){
-      aCmd.m_Command = CC_SWITCH_OFF;
-      aCmd.m_Parameter = 0; 
       char* aStateVal = http_getJSONParameterValue(aRootJSON, STATE_PARAMETER_NAME);
       if( aStateVal ){
         ESP_LOGI(TAG,"Switch state= '%s'", aStateVal);
+        SwitchState aState = SS_OFF;
         if( strcmp(aStateVal, ON_NAME) == 0 ){
-          aCmd.m_Command = CC_SWITCH_ON;
+          aState = SS_ON;
         }
+        setBoardState(aState);
       }
-      xQueueSend(aServer->m_SwitchQueue, &aCmd, NULL);
-
       httpd_resp_send_chunk(req, NULL, 0);    
       aRes = ESP_OK;
     }

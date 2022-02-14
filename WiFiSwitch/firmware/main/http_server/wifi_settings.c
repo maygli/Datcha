@@ -19,30 +19,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#pragma once
 
-#include <esp_http_server.h>
-#include <queue.h>
+#include "wifi_settings.h"
 
-#include "../config.h"
-#include "server_config.h"
-
-
-typedef struct _HTTPServer{
-    httpd_handle_t      m_HttpServer;
-    BoardConfig*        m_BoardConfig;
-    char                m_FileBuffer[HTTP_BUFFER_SIZE];
-    char                m_Path[MAX_PATH_SIZE+1];
-    int                 m_BasePathSize;
-} HTTPServer;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-esp_err_t HTTP_ServerStart(HTTPServer* theServer);
-esp_err_t HTTP_ServerStop(HTTPServer* theServer);
-
-#ifdef __cplusplus
+esp_err_t HTTP_SetWiFiSettings(httpd_req_t *req)
+{
+    httpd_resp_send_chunk(req, NULL, 0);    
+    return ESP_OK;
 }
-#endif
+
+esp_err_t HTTP_GetWiFiSettings(httpd_req_t *req)
+{
+    httpd_resp_send_chunk(req, NULL, 0);    
+    return ESP_OK;
+}

@@ -22,6 +22,14 @@
 
 #pragma once
 
+#define BOARD_NAME "Datcha WiFiSwitch"
+#define BOARD_HW_VERSION "v1.0.0"
+#define BOARD_FW_VERSION "v0.0.1"
+#define BOARD_DESCRIPTION "Datcha WiFi touch switch"
+#define BOARD_MANUFACTURER "Maygli <a href=\\\"mailto:mmaygli@gmail.com\\\">mmaygli@gmail.com</a>"
+#define BOARD_COPYRIGHT "&copy; Maygli 2021"
+#define BOARD_DEVICES "WiFiSwitch"
+
 #define MAX_PATH_SIZE           256
 
 #define INT_FLASH_BASE_PATH 	"/int"

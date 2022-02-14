@@ -30,11 +30,17 @@
 #include "server_get_file.h"
 #include "http_upload.h"
 #include "switch_control.h"
+#include "switch_settings.h"
+#include "wifi_settings.h"
 #include "http_server.h"
+#include "board_info.h"
 
 //Requests
-#define SWITCH_STATE   "/switch_state"
-#define SWITCH_CONTROL "/switch_control"
+#define SWITCH_STATE    "/switch_state"
+#define SWITCH_CONTROL  "/switch_control"
+#define SWITCH_SETTINGS "/switch_settings"
+#define WIFI_SETTINGS   "/wifi_settings"
+#define BOARD_INFO      "/board_info"
 
 static const char SERVER_TAG[]="server";
 
@@ -56,8 +62,7 @@ esp_err_t HTTP_ServerStart(HTTPServer* theServer)
      * allow the same handler to respond to multiple different
      * target URIs which match the wildcard scheme */
     config.uri_match_fn = httpd_uri_match_wildcard;
-
-//    config.max_uri_handlers = 16;
+    config.max_uri_handlers = 16;
     
     ESP_LOGI(SERVER_TAG, "Starting HTTP Server");
     if (httpd_start(&theServer->m_HttpServer, &config) != ESP_OK) {
@@ -73,6 +78,14 @@ esp_err_t HTTP_ServerStart(HTTPServer* theServer)
     };
     httpd_register_uri_handler(theServer->m_HttpServer, &aGetDefault);
 
+    httpd_uri_t aGetBoardInfo = {
+        .uri       = BOARD_INFO,  // Match all URIs of type /path/to/file
+        .method    = HTTP_GET,
+        .handler   = HTTP_GetBoardInfo,
+        .user_ctx  = theServer    // Pass server data as context
+    };
+    httpd_register_uri_handler(theServer->m_HttpServer, &aGetBoardInfo);
+
     httpd_uri_t aGetSwitchState = {
         .uri       = SWITCH_STATE,  // Match all URIs of type /path/to/file
         .method    = HTTP_GET,
@@ -80,6 +93,22 @@ esp_err_t HTTP_ServerStart(HTTPServer* theServer)
         .user_ctx  = theServer    // Pass server data as context
     };
     httpd_register_uri_handler(theServer->m_HttpServer, &aGetSwitchState);
+
+    httpd_uri_t aSwitchSettingsGet = {
+        .uri       = SWITCH_SETTINGS,  // Match all URIs of type /path/to/file
+        .method    = HTTP_GET,
+        .handler   = HTTP_GetSwitchSettings,
+        .user_ctx  = theServer    // Pass server data as context
+    };
+    httpd_register_uri_handler(theServer->m_HttpServer, &aSwitchSettingsGet);
+
+    httpd_uri_t aWiFiSettingsGet = {
+        .uri       = WIFI_SETTINGS,  // Match all URIs of type /path/to/file
+        .method    = HTTP_GET,
+        .handler   = HTTP_GetWiFiSettings,
+        .user_ctx  = theServer    // Pass server data as context
+    };
+    httpd_register_uri_handler(theServer->m_HttpServer, &aWiFiSettingsGet);
 
     /* get html */
     httpd_uri_t aGetHtml = {
@@ -97,6 +126,22 @@ esp_err_t HTTP_ServerStart(HTTPServer* theServer)
         .user_ctx  = theServer    // Pass server data as context
     };
     httpd_register_uri_handler(theServer->m_HttpServer, &aSwitchControl);
+
+    httpd_uri_t aSwitchSettingsSet = {
+        .uri       = SWITCH_SETTINGS,  // Match all URIs of type /path/to/file
+        .method    = HTTP_POST,
+        .handler   = HTTP_SetSwitchSettings,
+        .user_ctx  = theServer    // Pass server data as context
+    };
+    httpd_register_uri_handler(theServer->m_HttpServer, &aSwitchSettingsSet);
+
+    httpd_uri_t aWiFiSettingsSet = {
+        .uri       = WIFI_SETTINGS,  // Match all URIs of type /path/to/file
+        .method    = HTTP_POST,
+        .handler   = HTTP_SetWiFiSettings,
+        .user_ctx  = theServer    // Pass server data as context
+    };
+    httpd_register_uri_handler(theServer->m_HttpServer, &aWiFiSettingsSet);
 
     httpd_uri_t aFileUpload = {
         .uri       = "*",  // Match all URIs of type /path/to/file

@@ -105,15 +105,9 @@ void app_main()
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    s_Server.m_SwitchQueue = xQueueCreate(10, sizeof(SwitchCommand));
+    s_Server.m_BoardConfig = &s_BoardConfig;
 
-    xTaskCreate(switchBoardTask, "switch_task", 4096, s_Server.m_SwitchQueue, 10, NULL);
-
-    SwitchCommand aCmd;
-    aCmd.m_Command = CC_SWITCH_ON;
-    aCmd.m_Parameter = 0; 
-
-    xQueueSend(s_Server.m_SwitchQueue, &aCmd, NULL);
+    xTaskCreate(SWB_switchBoardTask, "switch_task", 4096, NULL, 10, NULL);
 
     initInternalFlash();
     UPD_Process();

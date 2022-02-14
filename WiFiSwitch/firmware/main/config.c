@@ -25,14 +25,26 @@
 #include <esp_err.h>
 #include <esp_log.h>
 
+#include <cJSON.h>
+
+#include "switch_board.h"
+
+#include "board_config.h"
 #include "common_def.h"
 #include "config.h"
 
-//static const char TAG[]="config";
+#define ON_BRIGHTNESS_KEYWORD "on_brightness"
+#define OFF_BRIGHTNESS_KEYWORD "off_brightness"
+#define SOUND_KEYWORD "sound"
+#define STYLE_KEYWORD "style"
+
+#define ON_VALUE    "on"
+
+static const char TAG[]="config";
 
 esp_err_t CFG_Init(BoardConfig* theConfig)
 {
-    theConfig->m_StConn.m_IsEnabled = false;
+    theConfig->m_StConn.m_IsEnabled = true;
     strcpy(theConfig->m_StConn.m_SSID, DEFAULT_ST_SSID);
     strcpy(theConfig->m_StConn.m_Password, DEFAULT_ST_PASSWORD);
     theConfig->m_StConn.m_IsFixedAddress = true;
@@ -49,7 +61,7 @@ esp_err_t CFG_Init(BoardConfig* theConfig)
     theConfig->m_StConn.m_Gateway[2] = ST_GATE_2;
     theConfig->m_StConn.m_Gateway[3] = ST_GATE_3;
 
-    theConfig->m_APConn.m_IsEnabled = true;
+    theConfig->m_APConn.m_IsEnabled = false;
     strcpy(theConfig->m_APConn.m_SSID, DEFAULT_AP_SSID);
     strcpy(theConfig->m_APConn.m_Password, DEFAULT_AP_PASSWORD);
     theConfig->m_APConn.m_IsFixedAddress = true;
@@ -77,4 +89,78 @@ ConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig)
 ConnectionInfo* CFG_GetAPConnection(BoardConfig* theConfig)
 {
     return &theConfig->m_APConn;
+}
+
+void setBoardUpdateFunc( BoardConfig* theConfig, esp_err_t (*theBoardUpdateFunc)(void* arg), void* theBoardUpdateFuncArg )
+{
+    theConfig->m_BoardUpdate = theBoardUpdateFunc;
+    theConfig->m_BoardUpdateArg = theBoardUpdateFuncArg;
+}
+
+esp_err_t CFG_ParseSwitchSettings(BoardConfig* theConfig, cJSON* theJSON)
+{
+    cJSON* aDataItem = theJSON->child;
+    while( aDataItem != NULL ){
+        char* aVal = cJSON_GetStringValue(aDataItem);
+        ESP_LOGI(TAG, "Item=%s, value=%s\n", aDataItem->string, aVal);
+        if(strcmp( aDataItem->string, ON_BRIGHTNESS_KEYWORD) == 0 ){
+            int aNumber=100;
+            int aCnt = sscanf(aVal, "%d", &aNumber);
+            if( aCnt != 1){
+                ESP_LOGE(TAG, "Switch parameters JSON has wrong format. On brightness shoud be a number");
+            }
+            else{
+                theConfig->m_SwitchConfig.m_OnBrightness = (uint8_t)aNumber;
+                ESP_LOGI(TAG, "On_BRIGHTNESS found=%d", theConfig->m_SwitchConfig.m_OnBrightness);
+                setOnBrightness(theConfig->m_SwitchConfig.m_OnBrightness);
+            }
+        }
+        else if(strcmp( aDataItem->string, OFF_BRIGHTNESS_KEYWORD) == 0 ){
+            int aNumber = 100;
+            int aCnt = sscanf(aVal, "%d",&aNumber);
+            if( aCnt != 1 ){
+                ESP_LOGE(TAG, "Switch parameters JSON has wrong format. Off brightness shoud be a number");
+            }
+            else{
+                theConfig->m_SwitchConfig.m_OffBrightness = aNumber;
+                ESP_LOGI(TAG, "Off_BRIGHTNESS found=%d", theConfig->m_SwitchConfig.m_OffBrightness);
+                setOffBrightness(theConfig->m_SwitchConfig.m_OffBrightness);
+            }
+        }
+        else if(strcmp( aDataItem->string, SOUND_KEYWORD) == 0 ){
+            if( cJSON_IsString(aDataItem) ){
+                if( strcmp(aVal, ON_VALUE) == 0 ){
+                    theConfig->m_SwitchConfig.m_IsSoundOn = true;
+                }
+                else{
+                    theConfig->m_SwitchConfig.m_IsSoundOn = false;
+                }
+                ESP_LOGI(TAG, "Sound found=%d", theConfig->m_SwitchConfig.m_IsSoundOn);
+                soundOn(theConfig->m_SwitchConfig.m_IsSoundOn);
+            }
+            else{
+                ESP_LOGE(TAG, "Switch parameters JSON has wrong format. Style shoud be a number (0 or 1)");
+            }
+        }
+        else if(strcmp( aDataItem->string, STYLE_KEYWORD) == 0 ){
+            int aNumber = 0;
+            int aCnt = sscanf(aVal, "%d", &aNumber);
+            if( aCnt != 1 ){
+                ESP_LOGE(TAG, "Switch parameters JSON has wrong format. Style shoud be a number");
+            }
+            else{
+                theConfig->m_SwitchConfig.m_Style = aNumber;
+                if( theConfig->m_SwitchConfig.m_Style > MAX_STYLE ){
+                    ESP_LOGE(TAG, "Switch parameters JSON has wrong format. Style shoud be a number (0 or 1)");
+                    theConfig->m_SwitchConfig.m_Style = MAX_STYLE;   
+                }
+                ESP_LOGI(TAG, "Style found=%d", theConfig->m_SwitchConfig.m_Style);
+            }
+        }
+        aDataItem = aDataItem->next;
+    }
+    if( theConfig->m_BoardUpdate ){
+        theConfig->m_BoardUpdate(theConfig->m_BoardUpdateArg);
+    }
+    return ESP_OK;
 }

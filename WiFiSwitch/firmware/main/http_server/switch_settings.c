@@ -19,30 +19,43 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#pragma once
 
-#include <esp_http_server.h>
-#include <queue.h>
+#include <esp_log.h>
 
-#include "../config.h"
-#include "server_config.h"
+#include "switch_settings.h"
 
+#include "http_server.h"
+#include "http_utils.h"
 
-typedef struct _HTTPServer{
-    httpd_handle_t      m_HttpServer;
-    BoardConfig*        m_BoardConfig;
-    char                m_FileBuffer[HTTP_BUFFER_SIZE];
-    char                m_Path[MAX_PATH_SIZE+1];
-    int                 m_BasePathSize;
-} HTTPServer;
+static const char TAG[]="http_switch";
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-esp_err_t HTTP_ServerStart(HTTPServer* theServer);
-esp_err_t HTTP_ServerStop(HTTPServer* theServer);
-
-#ifdef __cplusplus
+esp_err_t HTTP_SetSwitchSettings(httpd_req_t *req)
+{
+    esp_err_t aRetVal;
+    HTTPServer* aServer = (HTTPServer*)req->user_ctx;
+    BoardConfig* aConfig = aServer->m_BoardConfig;
+    cJSON* aRootJson = HTTP_ReceiveJSON(req);
+    if( aRootJson == NULL ){
+        ESP_LOGE(TAG,"HTTP_SetSwitchSettings::Can't parse JSON file");
+        return ESP_FAIL;
+    }
+    aRetVal = CFG_ParseSwitchSettings(aConfig, aRootJson);
+    if( aRetVal != ESP_OK ){
+        httpd_resp_send_500(req);
+    }
+    else{
+        httpd_resp_send_chunk(req, NULL, 0);    
+    }
+    cJSON_Delete(aRootJson);
+    
+ 
+    return aRetVal;
 }
-#endif
+
+esp_err_t HTTP_GetSwitchSettings(httpd_req_t *req)
+{
+    char aRes[] = "{\"on_brightness\": 47,\"off_brightness\": 36,\"sound\": \"off\",\"style\": 1,}";
+    httpd_resp_send_chunk(req, aRes, strlen(aRes));    
+    httpd_resp_send_chunk(req, NULL, 0);    
+    return ESP_OK;
+}

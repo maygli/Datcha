@@ -19,30 +19,44 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#pragma once
 
-#include <esp_http_server.h>
-#include <queue.h>
+#include <esp_log.h>
 
-#include "../config.h"
-#include "server_config.h"
+#include "../common_def.h"
 
+#include "http_server.h"
+#include "board_info.h"
 
-typedef struct _HTTPServer{
-    httpd_handle_t      m_HttpServer;
-    BoardConfig*        m_BoardConfig;
-    char                m_FileBuffer[HTTP_BUFFER_SIZE];
-    char                m_Path[MAX_PATH_SIZE+1];
-    int                 m_BasePathSize;
-} HTTPServer;
+#define MAX_BOARD_INFO_SZIE 512
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+static const char TAG[] = "board_info";
 
-esp_err_t HTTP_ServerStart(HTTPServer* theServer);
-esp_err_t HTTP_ServerStop(HTTPServer* theServer);
+static const char BoardInfoTemplate[] = "{"\
+    "\"board_name\": \"%s\","\
+    "\"board_hw_version\": \"%s\","\
+    "\"board_sw_version\": \"%s\","\
+    "\"board_desc\": \"%s\","\
+    "\"manufacturer\": \"%s\","\
+    "\"copyright\": \"%s\","\
+    "\"devices\": \"%s\""\
+  "}";
 
-#ifdef __cplusplus
+esp_err_t HTTP_GetBoardInfo(httpd_req_t *req)
+{
+    esp_err_t aRetVal;
+    char aBuffer[MAX_BOARD_INFO_SZIE];
+    sprintf(aBuffer, BoardInfoTemplate, 
+        BOARD_NAME,
+        BOARD_HW_VERSION,
+        BOARD_FW_VERSION,
+        BOARD_DESCRIPTION,
+        BOARD_MANUFACTURER,
+        BOARD_COPYRIGHT,
+        BOARD_DEVICES);
+    ESP_LOGI(TAG,"Get board info. Len=%d\n", strlen(aBuffer));
+    HTTPServer* aServer = (HTTPServer*)req->user_ctx;
+    httpd_resp_send_chunk(req, aBuffer, strlen(aBuffer));    
+    httpd_resp_send_chunk(req, NULL, 0);    
+
+    return ESP_OK;
 }
-#endif

@@ -22,46 +22,15 @@
 
 #pragma once
 
+#include <esp_err.h>
+#include <esp_http_server.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <esp_err.h>
-
-#include <cJSON.h>
-
-#include "common_def.h"
-
-typedef struct _ConnectionInfo{
-  bool          m_IsEnabled;
-  char          m_SSID[MAX_SSID_SIZE];
-  char          m_Password[MAX_PASSWORD_SIZE];
-  bool          m_IsFixedAddress;
-  unsigned char m_Ip[IP_SIZE];
-  unsigned char m_NetMask[IP_SIZE];  
-  unsigned char m_Gateway[IP_SIZE];  
-} ConnectionInfo;
-
-typedef struct _SwitchConfig{
-  uint8_t m_OnBrightness;
-  uint8_t m_OffBrightness;
-  bool    m_IsSoundOn;
-  int     m_Style;
-} SwitchConfig;
-
-typedef struct _BoardConfig{
-  ConnectionInfo  m_APConn;
-  ConnectionInfo  m_StConn;
-  SwitchConfig    m_SwitchConfig;
-  esp_err_t       (*m_BoardUpdate)(void* arg);
-  void*           m_BoardUpdateArg;
-} BoardConfig;
-
-esp_err_t CFG_Init(BoardConfig* theConfig);
-ConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig);
-ConnectionInfo* CFG_GetAPConnection(BoardConfig* theConfig);
-esp_err_t CFG_ParseSwitchSettings(BoardConfig* theConfig, cJSON* theJSON);
-void setBoardUpdateFunc( BoardConfig* theConfig, esp_err_t (*theBoardUpdateFunc)(void* arg), void* theBoardUpdateFuncArg );
+esp_err_t HTTP_SetWiFiSettings(httpd_req_t *req);
+esp_err_t HTTP_GetWiFiSettings(httpd_req_t *req);
 
 #ifdef __cplusplus
 }
