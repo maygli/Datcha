@@ -1,0 +1,204 @@
+.device_title {
+  text-align: center;
+  background: #2980b9;
+  color: #FFFFFF;
+}
+
+.error_title {
+  text-align: center;
+  background: darkred;
+  color: #FFFFFF;
+}
+
+.device_second_title {
+    text-align: center;
+} 
+
+.button{
+    display: inline-block;
+    padding: 2px;
+    background-color: #3F3F3F;
+    color: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 4px;
+}
+
+.button:hover{
+  background-color: #2980b9;
+}
+
+.dis_button{
+  display: inline-block;
+  padding: 2px;
+  background-color: #7F7F7F;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 4px;
+}
+
+.combobox{
+  display:inline-block;
+}
+
+.combobox_btn{
+  display:inline-block;
+  border: none;
+  outline: none;
+  color: white;
+  padding: 2px 2px;
+  background-color: inherit;
+  font-family: inherit;
+  align-items: center;
+  text-align: center;
+  vertical-align: middle;
+/*    min-width:120px;*/
+  font-size: 17px
+  /*  margin: 3px;*/
+}
+
+  .combobox_btn:hover{
+    background-color: #2980b9;
+  }
+
+  .combobox-content{
+    display: none;
+    position: absolute;
+    background-color: lightgray;
+    color:black;
+    min-width:120px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 20;
+ }
+
+.combobox-content a{
+    color:black;
+}
+
+.combobox-content > * {
+    display: flex;
+    margin: 3px;
+} 
+
+.combobox-item{
+    display:flex;
+    border: none;
+    outline: none;
+    color: black;
+    padding: 2px 2px;
+    background-color: inherit;
+    font-family: inherit;
+    align-items: center;
+    text-align: center;
+    vertical-align: middle;
+    margin: 0;    
+}
+
+.combobox-item:hover{
+    background-color: #2980b9;
+    color:white;
+}
+
+.modal {
+  display: block; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 10; /* Sit on top */
+/*  padding-top: 30%; /* Location of the box */
+/*  padding-bottom: 50%;*/
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+  /* Modal Content */
+.modal_content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 2px;
+  margin-top: 10%;
+  padding-top: 0;
+  border: 1px solid #888;
+  width: 80%;
+}
+
+.centered_cell {
+    align-items: center;
+    text-align: center;
+}
+
+.properties_group{
+    border:2px solid;
+    border-color:#3F3F3F;
+    vertical-align: top;
+    border-collapse: separate;
+    border-radius: 5px;
+}
+
+.active_properties_group{
+    border:2px solid;
+    border-color:#2980b9;
+    vertical-align: top;
+    border-radius: 5px;
+}
+
+.footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    width: 100vw;
+    min-height: 3vh;
+    height:20px;
+    padding-left:0px;
+}
+
+.topnav {
+    background-color: #3F3F3F;
+    overflow: hidden;
+    vertical-align: middle;
+    width: 100%;
+    display: inline-block;
+/*    align-items:center;*/
+  }
+
+.menu_item {
+    display: inline-block;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 10px 10px;
+    text-decoration: none;
+    font-size: 17px;
+  }
+  
+  /* Add an active class to highlight the current page */
+  .active {
+    background-color: #2980b9;
+    color: white;
+  }
+
+.close {
+  float: right;
+  font-weight: bold;
+}
+
+.error_msg{
+  background-color: #f8cbad;
+}
+
+.success_msg{
+  background-color: seagreen;
+}
+
+.normal_msg{
+  background-color: transparent;
+}
+
+.disable{
+  pointer-events:none;
+  background:lightgrey;
+}

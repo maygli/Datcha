@@ -1,0 +1,40 @@
+<link rel="stylesheet" href="styles/settings_upgrade.css"></link>
+<div><h4 data-i18n="settings_upgrade_please_select"></h4></div>
+    <p/>
+    <div data-controller_class="ExpandableController">
+        <button type="button" class="collapsible" id="collapsible" data-controller_item="ExpandButton"><span id="expand_sign" data-controller_item="ExpandSign">+</span><span id="collapse_sign" data-controller_item="CollapseSign">-</span><span data-i18n="settings_upgrade_uploaded_desc"> Uploaded file description</span></button>
+        <div id="content" hidden="true" data-controller_item="ModalContent">
+            <hr/>
+            <p/>
+            <h4 data-i18n="settings_firmware_file_title"></h4>
+            <p/>   
+            <table>
+	            <tr><td><b>firmware.bin</b></td><td data-i18n="settings_upgrade_controller_firmware"></td></tr>
+	            <tr><td><b>config.json</b></td><td  data-i18n="settings_upgrade_board_сonfiguration"></td></tr>
+	            <tr><td><b>*<b></td><td data-i18n="settings_upgrade_any_other"></td></tr> 
+            </table>
+            <h4 data-i18n="settings_upgrade_pay_attantion">Please pay attantion, filename length shouldn't exceed 32 characters</h4>
+            <p><span data-i18n="settings_upgrade_tar">Tar file can be prepared by</span><a href="https://www.7-zip.org">7z</a></p>
+            <hr>
+        </div>
+    </div>
+    <p/>
+    <div>
+        <input type="checkbox" name="Clear" id="clear" class="button" checked/>
+        <label for="clear" data-i18n="settings_upgrade_clear_memory"></label>
+        <br/>            
+        <input type="file" name="name" class="input_file" id="file" data-controller_item="UploadButton">
+        <label for="file" class="button" data-i18n="settings_select_file">Select file</label>
+        <br/>
+        <p>&nbsp</p>
+        <div id="modal" class="modal" data-controller_class="UploadDialogController">
+            <div id="modal_content" class="modal_content">
+                <h2 id="upload_title" class="device_title" data-i18n="settings_upgrade_uploading_firmware">Uploading firmware</h2>
+                <p><span data-i18n="settings_upgrade_file">File</span>: <b id="filename_info" data-controller_item="FileName"></b></p>
+                <progress id="progress_bar" value="0" max="100" style="display:none" data-controller_item="ProgressBar"></progress> 
+                <h3 id="status" data-controller_item="StatusLbl"></h3>
+                <p id="uploaded_cnt" data-controller_item="UploadMsg"><span data-i18n="settings_upgrade_uploaded">Uploaded</span>&nbsp;<span  id="loaded_current" data-controller_item="LoadCurrent">0</span>&nbsp;<span data-i18n="settings_upgrade_bytesof"> bytes of</span>&nbsp;<span id="loaded_n_total"  data-controller_item="LoadTotal">0</span> </p>             
+                <p>&nbsp<span class="button close" id="button_close" data-i18n="settings_upgrade_close" data-controller_item="CloseButton">Close</span></p>
+            </div>
+        </div>
+    </div>
