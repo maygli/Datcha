@@ -21,6 +21,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 
 #include <esp_log.h>
 
@@ -28,10 +29,8 @@
 
 #include <board_config.h>
 #include "config_wifi.h"
+#include "json_utils.h"
 #include "common_def.h"
-
-#define ON_VALUE    "on"
-#define OFF_VALUE   "off"
 
 #define IS_AP_KEYWORD           "is_ap"
 #define AP_SSID_KEYWORD         "ap_ssid"
@@ -68,7 +67,7 @@ static const char WiFiSettingTemplate[] = "{"\
     "\"st_attempts\": %d"\
     "}";
 
-static const char TAG[]="config_wifi";
+//static const char TAG[]="config_wifi";
 
 void CFG_WiFiInit(WiFiConfig* theConfig)
 {
@@ -117,133 +116,113 @@ void CFG_WiFiInit(WiFiConfig* theConfig)
 #define ST_GATEWAY_KEYWORD      "st_gateway"
 #define ST_ATTEMPTS_KEYWORD     "st_attempts"
 
-esp_err_t cfg_convertIP( char* theString, uint8_t* theIP)
-{
-    int anIP1;
-    int anIP2;
-    int anIP3;
-    int anIP4;
-    int aConvNumber = sscanf(theString, "%d.%d.%d.%d", &anIP1, &anIP2, &anIP3, & anIP4);
-    if( aConvNumber != 4 ){
-        ESP_LOGE(TAG,"Can't convert IP address. Wrong format");
-        return ESP_FAIL;
-    }
-    theIP[0] = (uint8_t)anIP1;
-    theIP[1] = (uint8_t)anIP2;
-    theIP[2] = (uint8_t)anIP3;
-    theIP[3] = (uint8_t)anIP4;
-    return ESP_OK;
-}
-
 esp_err_t CFG_WiFiParseSettings(WiFiConfig* theConfig, cJSON* theJSON, bool isFullSet)
 {
+    WiFiConfig aConfig = *theConfig;
+    esp_err_t aRes = ESP_OK;
     if( isFullSet ){
-        theConfig->m_APConn.m_IsEnabled = false;
-        theConfig->m_APConn.m_IsFixedIP = false;
-        theConfig->m_StConn.m_IsEnabled = false;
-        theConfig->m_StConn.m_IsFixedIP = false;
+        aConfig.m_APConn.m_IsEnabled = false;
+        aConfig.m_APConn.m_IsFixedIP = false;
+        aConfig.m_StConn.m_IsEnabled = false;
+        aConfig.m_StConn.m_IsFixedIP = false;
     }
     cJSON* aDataItem = theJSON->child;
     while( aDataItem != NULL ){
-        char* aVal = cJSON_GetStringValue(aDataItem);
-        ESP_LOGI(TAG, "Item=%s, value=%s\n", aDataItem->string, aVal);
         if(strcmp( aDataItem->string, IS_AP_KEYWORD) == 0 ){
-            if( strcmp(aVal, ON_VALUE) ==0 ){
-                theConfig->m_APConn.m_IsEnabled = true;
-            }
-            else{
-                theConfig->m_APConn.m_IsEnabled = false;
+            aRes = JSU_ConverBool(aDataItem, &aConfig.m_APConn.m_IsEnabled);
+            if( aRes != ESP_OK ){
+                return aRes;
             }
         }
         else if(strcmp( aDataItem->string, AP_SSID_KEYWORD) == 0 ){
-            if( strlen(aVal) > MAX_SSID_SIZE ){
-                ESP_LOGE(TAG, "Len of access point SSID more than maximum");
-                return ESP_FAIL;
+            aRes = JSU_ConverString(aDataItem, aConfig.m_APConn.m_SSID, MAX_SSID_SIZE);
+            if( aRes != ESP_OK ){
+                return aRes;
             }
-            strcpy(theConfig->m_APConn.m_SSID, aVal );
         }     
         else if(strcmp( aDataItem->string, AP_PWD_KEYWORD) == 0 ){
-            if( strlen(aVal) > MAX_PASSWORD_SIZE ){
-                ESP_LOGE(TAG, "Len of access point password more than maximum");
-                return ESP_FAIL;
+            aRes = JSU_ConverString(aDataItem, aConfig.m_APConn.m_Password, MAX_PASSWORD_SIZE);
+            if( aRes != ESP_OK ){
+                return aRes;
             }
-            strcpy(theConfig->m_APConn.m_Password, aVal );
         }     
         else if(strcmp( aDataItem->string, AP_FIXED_IP_KEYWORD) == 0 ){
-            if( strcmp(aVal, ON_VALUE) ==0 ){
-                theConfig->m_APConn.m_IsFixedIP = true;
-            }
-            else{
-                theConfig->m_StConn.m_IsFixedIP = false;
+            aRes = JSU_ConverBool(aDataItem, &aConfig.m_APConn.m_IsFixedIP);
+            if( aRes != ESP_OK ){
+                return aRes;
             }
         }     
         else if(strcmp( aDataItem->string, AP_IP_KEYWORD) == 0 ){
-            if( cfg_convertIP(aVal, theConfig->m_APConn.m_Ip) != ESP_OK )
-                return ESP_FAIL;
+            aRes = JSU_ConvertIP(aDataItem, aConfig.m_APConn.m_Ip);
+            if( aRes != ESP_OK ){
+                return aRes;
+            }
         }     
         else if(strcmp( aDataItem->string, AP_NETMASK_KEYWOR) == 0 ){
-            if( cfg_convertIP(aVal, theConfig->m_APConn.m_NetMask) != ESP_OK )
-                return ESP_FAIL;
+            aRes = JSU_ConvertIP(aDataItem, aConfig.m_APConn.m_NetMask);
+            if( aRes != ESP_OK ){
+                return aRes;
+            }
         }
         else if(strcmp( aDataItem->string, AP_GATEWAY_KEYWORD) == 0 ){
-            if( cfg_convertIP(aVal, theConfig->m_APConn.m_Gateway) != ESP_OK )
-                return ESP_FAIL;
+            aRes = JSU_ConvertIP(aDataItem, aConfig.m_APConn.m_Gateway);
+            if( aRes != ESP_OK ){
+                return aRes;
+            }
         }
         else if(strcmp( aDataItem->string, IS_ST_KEYWORD) == 0 ){
-            if( strcmp(aVal, ON_VALUE) ==0 ){
-                theConfig->m_StConn.m_IsEnabled = true;
-            }
-            else{
-                theConfig->m_StConn.m_IsEnabled = false;
+            aRes = JSU_ConverBool(aDataItem, &aConfig.m_StConn.m_IsEnabled);
+            if( aRes != ESP_OK ){
+                return aRes;
             }
         }
         else if(strcmp( aDataItem->string, ST_SSID_KEYWORD) == 0 ){
-            if( strlen(aVal) > MAX_SSID_SIZE ){
-                ESP_LOGE(TAG, "Len of station SSID more than maximum");
-                return ESP_FAIL;
+            aRes = JSU_ConverString(aDataItem, aConfig.m_StConn.m_SSID, MAX_SSID_SIZE);
+            if( aRes != ESP_OK ){
+                return aRes;
             }
-            strcpy(theConfig->m_StConn.m_SSID, aVal );
         }     
         else if(strcmp( aDataItem->string, ST_PWD_KEYWORD) == 0 ){
-            if( strlen(aVal) > MAX_PASSWORD_SIZE ){
-                ESP_LOGE(TAG, "Len of station password more than maximum");
-                return ESP_FAIL;
+            aRes = JSU_ConverString(aDataItem, aConfig.m_StConn.m_Password, MAX_PASSWORD_SIZE);
+            if( aRes != ESP_OK ){
+                return aRes;
             }
-            strcpy(theConfig->m_StConn.m_Password, aVal );
         }     
         else if(strcmp( aDataItem->string, ST_FIXED_IP_KEYWORD) == 0 ){
-            if( strcmp(aVal, ON_VALUE) ==0 ){
-                theConfig->m_StConn.m_IsFixedIP = true;
-            }
-            else{
-                theConfig->m_StConn.m_IsFixedIP = false;
+            aRes = JSU_ConverBool(aDataItem, &aConfig.m_StConn.m_IsFixedIP);
+            if( aRes != ESP_OK ){
+                return aRes;
             }
         }     
         else if(strcmp( aDataItem->string, ST_IP_KEYWORD) == 0 ){
-             if( cfg_convertIP(aVal, theConfig->m_StConn.m_Ip) != ESP_OK )
-                return ESP_FAIL;
+            aRes = JSU_ConvertIP(aDataItem, aConfig.m_StConn.m_Ip);
+            if( aRes != ESP_OK ){
+                return aRes;
+            }
         }     
         else if(strcmp( aDataItem->string, ST_NETMASK_KEYWOR) == 0 ){
-            if( cfg_convertIP(aVal, theConfig->m_StConn.m_NetMask) != ESP_OK )
-                return ESP_FAIL;
+            aRes = JSU_ConvertIP(aDataItem, aConfig.m_StConn.m_NetMask);
+            if( aRes != ESP_OK ){
+                return aRes;
+            }
         }
         else if(strcmp( aDataItem->string, ST_GATEWAY_KEYWORD) == 0 ){
-            if( cfg_convertIP(aVal, theConfig->m_StConn.m_Gateway) != ESP_OK )
-                return ESP_FAIL;
-        }     
+            aRes = JSU_ConvertIP(aDataItem, aConfig.m_StConn.m_Gateway);
+            if( aRes != ESP_OK ){
+                return aRes;
+            }
+        }
         else if(strcmp( aDataItem->string, ST_ATTEMPTS_KEYWORD) == 0 ){
-            int aNumber=100;
-            int aCnt = sscanf(aVal, "%d", &aNumber);
-            if( aCnt != 1){
-                ESP_LOGE(TAG, "Wrong wifi config format. Connection attemts count should be number.");
-                return ESP_FAIL;
+            int aVal;
+            aRes = JSU_ConverInt(aDataItem, &aVal);
+            if( aRes != ESP_OK ){
+                return aRes;
             }
-            else{
-                theConfig->m_StAttemptsCount = (uint8_t)aNumber;
-            }
-        }     
+            aConfig.m_StAttemptsCount = (uint8_t)aVal;
+        }    
         aDataItem = aDataItem->next;
     }
+    *theConfig = aConfig;
     return ESP_OK;
 }
 

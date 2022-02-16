@@ -22,7 +22,7 @@
 
 #include <esp_log.h>
 
-#include "../config_switch.h"
+#include "../config.h"
 
 #include "switch_settings.h"
 
@@ -43,7 +43,7 @@ esp_err_t HTTP_SetSwitchSettings(httpd_req_t *req)
         ESP_LOGE(TAG,"HTTP_SetSwitchSettings::Can't parse JSON file");
         return ESP_FAIL;
     }
-    aRetVal = CFG_SwitchParseSettings(&aConfig->m_SwitchConfig, aRootJson);
+    aRetVal = CFG_ParseSwitchSettings(aConfig, aRootJson, true);
     if( aRetVal != ESP_OK ){
         httpd_resp_send_500(req);
     }

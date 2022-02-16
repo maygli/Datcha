@@ -42,6 +42,9 @@
 #define COMPLETE_FILE_PATH      UPLOAD_DIR"/"COMPLETE_FILE_NAME
 #define TAR_EXT                 ".tar"
 #define CONFIG_FILE_NAME	    "board_config.json"
+#define CONFIG_FILE_PATH        INT_FLASH_BASE_PATH"/"CONFIG_FILE_NAME
+#define UPLOAD_CONFIG_FILE_NAME "config.json"
+#define UPLOADED_CONFIG_PATH    INT_FLASH_BASE_PATH"/"UPLOAD_CONFIG_FILE_NAME
 #define FIRMWARE_FILE_NAME      "firmware.bin"
 #define FIRMWARE_FILE_PATH      HTML_DIR"/"FIRMWARE_FILE_NAME
 
@@ -85,7 +88,10 @@
 #define AP_GATE_2               1
 #define AP_GATE_3               54
 
-#define DEFAUL_ON_BRIGNESS      99
-#define DEFAUL_OFF_BRIGNESS     95
-#define DEFAUL_SWITCH_SOUND     true
-#define DEFAUL_SWITCH_STYLE     0
+#define DEFAULT_ON_BRIGNESS      99
+#define DEFAULT_OFF_BRIGNESS     95
+#define DEFAULT_SWITCH_SOUND     true
+#define DEFAULT_SWITCH_STYLE     0
+
+#define ON_VALUE    "on"
+#define OFF_VALUE   "off"

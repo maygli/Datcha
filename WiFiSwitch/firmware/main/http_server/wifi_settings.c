@@ -25,7 +25,7 @@
 #include "http_server.h"
 #include "http_utils.h"
 #include "wifi_settings.h"
-#include "../config_wifi.h"
+#include "../config.h"
 
 #define MAX_WIFI_JSON_SIZE 768
 
@@ -41,7 +41,7 @@ esp_err_t HTTP_SetWiFiSettings(httpd_req_t *req)
         ESP_LOGE(TAG,"HTTP_SetWiFiSettings::Can't parse JSON file");
         return ESP_FAIL;
     }
-    aRetVal = CFG_WiFiParseSettings(&aConfig->m_WiFiConfig, aRootJson, true);
+    aRetVal = CFG_ParseWiFiSettings(aConfig, aRootJson, true);
     if( aRetVal != ESP_OK ){
         httpd_resp_send_500(req);
     }

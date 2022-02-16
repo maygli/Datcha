@@ -49,34 +49,17 @@ static HTTPServer   s_Server;
 
 void test_fat()
 {
-    ESP_LOGI(TAG, "Opening file");
-    FILE* f = fopen("/int/hello.txt", "w");
+    ESP_LOGI(TAG, "Opening file config file");
+    FILE* f = fopen(CONFIG_FILE_PATH, "r");
     if (f == NULL) {
-        ESP_LOGE(TAG, "Failed to open file for writing");
+        ESP_LOGE(TAG, "Failed to open config file");
         return;
     }
-    fprintf(f, "Hello World!\n");
+    char aBuffer[4096];
+    fgets(aBuffer, 4096, f);
+    ESP_LOGI(TAG, "******* Config file *********");
+    ESP_LOGI(TAG, "%s", aBuffer);
     fclose(f);
-    ESP_LOGI(TAG, "File written");
-
-
-    // Open renamed file for reading
-    ESP_LOGI(TAG, "Reading file");
-    f = fopen("/int/hello.txt", "r");
-    if (f == NULL) {
-        ESP_LOGE(TAG, "Failed to open file for reading");
-        return;
-    }
-    char line[64];
-    fgets(line, sizeof(line), f);
-    fclose(f);
-    // strip newline
-    char* pos = strchr(line, '\n');
-    if (pos) {
-        *pos = '\0';
-    }
-    ESP_LOGI(TAG, "Read from file: '%s'", line);
-
 }
 
 void initInternalFlash()
@@ -110,6 +93,7 @@ void app_main()
     xTaskCreate(SWB_switchBoardTask, "switch_task", 4096, NULL, 10, NULL);
 
     initInternalFlash();
+ //   test_fat();
     UPD_Process();
     ESP_ERROR_CHECK(CFG_Init(&s_BoardConfig));
 

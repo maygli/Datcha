@@ -22,30 +22,18 @@
 
 #pragma once
 
+#include <esp_err.h>
+#include <cJSON.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <esp_err.h>
-
-#include <cJSON.h>
-
-#include "common_def.h"
-#include "config_switch.h"
-#include "config_wifi.h"
-
-typedef struct _BoardConfig{
-  WiFiConfig      m_WiFiConfig;
-  SwitchConfig    m_SwitchConfig;
-} BoardConfig;
-
-esp_err_t CFG_Init(BoardConfig* theConfig);
-ConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig);
-ConnectionInfo* CFG_GetAPConnection(BoardConfig* theConfig);
-esp_err_t CFG_ParseWiFiSettings(BoardConfig* theConfig, cJSON* theJSON, bool isFullSet);
-esp_err_t CFG_ParseSwitchSettings(BoardConfig* theConfig, cJSON* theJSON, bool isFullSet);
-esp_err_t CFG_SaveToFile(BoardConfig* theConfig, const char* theFileName);
+esp_err_t JSU_ConverBool(cJSON* theJSON, bool* theRes);
+esp_err_t JSU_ConverInt(cJSON* theJSON, int* theRes);
+esp_err_t JSU_ConverString(cJSON* theJSON, char* theBuffer, size_t theStringMaxSize);
+esp_err_t JSU_ConvertIP(cJSON* theJSON, uint8_t* theRes);
 
 #ifdef __cplusplus
-}
+extern }
 #endif

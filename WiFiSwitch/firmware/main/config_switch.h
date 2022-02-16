@@ -43,7 +43,7 @@ typedef struct _SwitchConfig{
 } SwitchConfig;
 
 void CFG_SwitchInit(SwitchConfig* theConfig);
-esp_err_t CFG_SwitchParseSettings(SwitchConfig* theConfig, cJSON* theJSON);
+esp_err_t CFG_SwitchParseSettings(SwitchConfig* theConfig, cJSON* theJSON, bool isFullSet);
 esp_err_t CFG_SwitchGetSettingsString(SwitchConfig* theConfig, char* theBuffer);
 
 #ifdef __cplusplus

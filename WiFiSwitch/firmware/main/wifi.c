@@ -140,7 +140,7 @@ static bool wifi_Start(HTTPServer* theServer, BoardConfig* theConfig)
         if (strlen(anAPConn->m_Password) == 0) {
             wifi_config.ap.authmode = WIFI_AUTH_OPEN;
         }
-        if( aStConn->m_IsFixedIP ){
+        if( anAPConn->m_IsFixedIP ){
             ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP));
             tcpip_adapter_ip_info_t anAPIpConfig;
             IP4_ADDR(&anAPIpConfig.ip, anAPConn->m_Ip[0], anAPConn->m_Ip[1], anAPConn->m_Ip[2], anAPConn->m_Ip[3]);
