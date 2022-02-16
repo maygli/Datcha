@@ -71,6 +71,17 @@ void setBrightness(LED* theLED, uint8_t m_Brightness)
     }
 }
 
+void adjustLED(LED* theLED)
+{
+    if( theLED->m_Transition == LT_NONE ){
+        uint32_t aDuty = 1;
+        if( theLED->m_State == LS_ON ){
+            aDuty = (theLED->m_Brightness * PWM_PERIOD)/100;
+        }
+        pwm_set_duty(theLED->m_Channel,aDuty);
+    }
+}
+
 void updateLED(LED* theLED)
 {
     uint32_t aDuty = 0;

@@ -40,6 +40,7 @@
 #include "switch_board.h"
 
 //const char *TAGS = "main";
+static const char TAG[] = "switch_board";
 
 // PWM period is 125 Hz
 #define PWM_PERIOD 1000
@@ -102,6 +103,21 @@ void SWB_switchBoardTask(void *arg)
             case CC_ON_LED_BR:
               setBrightness(&aBoard.m_OnLED, aCmd.m_Parameter);
               break;
+            case CC_STYLE:{
+              ESP_LOGI(TAG, "Set style %d",aCmd.m_Parameter);
+              if( aCmd.m_Parameter == 0 ){
+                  aBoard.m_OnLED.m_Channel = 0;
+                  aBoard.m_OffLED.m_Channel = 1;
+              }
+              else{
+                  aBoard.m_OnLED.m_Channel = 1;
+                  aBoard.m_OffLED.m_Channel = 0;
+              }
+              adjustLED(&aBoard.m_OnLED);
+              adjustLED(&aBoard.m_OffLED);
+              pwm_start();
+              break;
+            }
             }
             vTaskDelay(100 / portTICK_RATE_MS);
         }

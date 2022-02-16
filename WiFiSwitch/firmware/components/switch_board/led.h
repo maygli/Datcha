@@ -50,6 +50,7 @@ void offLED(LED* theLED);
 void onLED(LED* theLED);
 void setBrightness(LED* theLED, uint8_t m_Brightness);
 void updateLED(LED* theLED);
+void adjustLED(LED* theLED);
 
 #ifdef __cplusplus
 }
