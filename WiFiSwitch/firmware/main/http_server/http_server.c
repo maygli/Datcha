@@ -65,8 +65,9 @@ esp_err_t HTTP_ServerStart(HTTPServer* theServer)
     config.max_uri_handlers = 16;
     
     ESP_LOGI(SERVER_TAG, "Starting HTTP Server");
-    if (httpd_start(&theServer->m_HttpServer, &config) != ESP_OK) {
-        ESP_LOGE(SERVER_TAG, "Failed to start file server!");
+    esp_err_t aRes = httpd_start(&theServer->m_HttpServer, &config);
+    if ( aRes != ESP_OK ) {
+        ESP_LOGE(SERVER_TAG, "Failed to start file server %d!", aRes);
         return ESP_FAIL;
     }
 

@@ -90,7 +90,7 @@ void app_main()
 
     s_Server.m_BoardConfig = &s_BoardConfig;
 
-    xTaskCreate(SWB_switchBoardTask, "switch_task", 4096, NULL, 10, NULL);
+    xTaskCreate(SWB_switchBoardTask, "switch_task", 2048, NULL, 10, NULL);
 
     initInternalFlash();
  //   test_fat();
