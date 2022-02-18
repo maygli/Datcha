@@ -37,14 +37,15 @@
 #include "config.h"
 #include "http_server/http_server.h"
 
-#define GOT_IPV4_BIT BIT(0)
-
 #define CONNECTED_BITS (BIT(0))
 #define FAILED_BITS (BIT(1))
+#define INFINITE_ATTEMPTS -1
 
 static EventGroupHandle_t s_connect_event_group;
 
 static const char *TAG = "wifi";
+
+static int s_ConnAttempts;
 
 static void wifi_OnAPStaConnected(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
@@ -66,26 +67,34 @@ static void wifi_OnStDisconnect(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
 {
     system_event_sta_disconnected_t *event = (system_event_sta_disconnected_t *)event_data;
-    HTTPServer* aServer = (HTTPServer*)arg;
-    if( aServer )
-        HTTP_ServerStop(aServer);
-    ESP_LOGI(TAG, "Wi-Fi disconnected, trying to reconnect...");
+    int* anAttemptCnt = (int*)arg;
+    ESP_LOGI(TAG, "Wi-Fi disconnected, trying to reconnect... %d", *anAttemptCnt);
     if (event->reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
         /*Switch to 802.11 bgn mode */
         esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
     }
-    ESP_ERROR_CHECK(esp_wifi_connect());
+    if( (*anAttemptCnt) == 0 ){
+        (*anAttemptCnt) = INFINITE_ATTEMPTS;
+        xEventGroupSetBits(s_connect_event_group, FAILED_BITS);
+    }
+    else{
+        if( (*anAttemptCnt) > 0 ){
+            (*anAttemptCnt)--;
+        }
+        ESP_ERROR_CHECK(esp_wifi_connect());
+    }
 }
 
 static void wifi_OnStGotIp(void *arg, esp_event_base_t event_base,
                       int32_t event_id, void *event_data)
 {
-    HTTPServer* aServer = (HTTPServer*)arg;
+    int* anAttemptCnt = (int*)arg;
+    *anAttemptCnt = INFINITE_ATTEMPTS;
     tcpip_adapter_up(TCPIP_ADAPTER_IF_STA);
 /*    if( aServer )
         HTTP_ServerStart(aServer);*/
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-    xEventGroupSetBits(s_connect_event_group, GOT_IPV4_BIT);
+    xEventGroupSetBits(s_connect_event_group, CONNECTED_BITS);
     ESP_LOGI(TAG, "OnGotIp:" IPSTR, IP2STR(&event->ip_info.ip));
 }
 
@@ -151,27 +160,27 @@ static esp_err_t wifi_configureAP(ConnectionInfo* theConn)
     return aRes;
 }
 
-static bool wifi_start(HTTPServer* theServer, BoardConfig* theConfig)
+static bool wifi_start(BoardConfig* theConfig)
 {
 //   esp_err_t aRes;
     bool aRes = true;
     ESP_LOGI(TAG,"wifi_Start");
     ConnectionInfo* anAPConn = CFG_GetAPConnection(theConfig);
-    ConnectionInfo* aStConn = CFG_GetSTConnection(theConfig);
+    StConnectionInfo* aStConn = CFG_GetSTConnection(theConfig);
 
     wifi_mode_t aMode = WIFI_MODE_NULL;
 
-    aStConn->m_IsEnabled = true;
-    anAPConn->m_IsEnabled = true;
-
-    if( aStConn->m_IsEnabled && anAPConn->m_IsEnabled){
+    s_ConnAttempts = INFINITE_ATTEMPTS;
+    if(aStConn->m_Connection.m_IsEnabled && anAPConn->m_IsEnabled){
         ESP_LOGI(TAG, "Set mode to APST");
         aMode = WIFI_MODE_APSTA;
         aRes = false;
     }
-    else if( aStConn->m_IsEnabled ){
+    else if( aStConn->m_Connection.m_IsEnabled ){
         ESP_LOGI(TAG, "Set mode to ST");
         aMode = WIFI_MODE_STA;
+        if( aStConn->m_IsConnectAPAfter )
+            s_ConnAttempts = aStConn->m_StAttemptsCount;
     }
     else if( anAPConn->m_IsEnabled ){
         ESP_LOGI(TAG, "Set mode to AP");
@@ -189,16 +198,16 @@ static bool wifi_start(HTTPServer* theServer, BoardConfig* theConfig)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     ESP_ERROR_CHECK(esp_wifi_set_mode(aMode));
 
-    if( aStConn->m_IsEnabled ){
-        ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &wifi_OnStDisconnect, theServer));
-        ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_OnStGotIp, theServer));
+    if( aStConn->m_Connection.m_IsEnabled ){
+        ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &wifi_OnStDisconnect, &s_ConnAttempts));
+        ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_OnStGotIp, &s_ConnAttempts));
 
-        ESP_ERROR_CHECK(wifi_configureStation(aStConn));
+        ESP_ERROR_CHECK(wifi_configureStation(&aStConn->m_Connection));
     }
 
     if( anAPConn->m_IsEnabled ){
-        ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &wifi_OnAPStaConnected, theServer));
-        ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &wifi_OnAPStaDisonnected, theServer));
+        ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &wifi_OnAPStaConnected, NULL));
+        ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &wifi_OnAPStaDisonnected, NULL));
         ESP_ERROR_CHECK(wifi_configureAP(anAPConn));
     }
 
@@ -223,8 +232,15 @@ esp_err_t WiFi_Connect(HTTPServer* theServer, BoardConfig* theConfig)
     }
 
     s_connect_event_group = xEventGroupCreate();
-    if( wifi_start(theServer, theConfig) ){
-        xEventGroupWaitBits(s_connect_event_group, CONNECTED_BITS, true, true, portMAX_DELAY);
+    if( wifi_start(theConfig) ){
+        EventBits_t aConnRes = xEventGroupWaitBits(s_connect_event_group, CONNECTED_BITS |  FAILED_BITS, true, false, portMAX_DELAY);
+        if( aConnRes & FAILED_BITS ){
+            ESP_ERROR_CHECK(esp_wifi_stop());
+            ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+            ESP_LOGI(TAG, "Failed to connect in Station mode. Switch to AP");
+            wifi_configureAP(&theConfig->m_WiFiConfig.m_APConn);
+            ESP_ERROR_CHECK(esp_wifi_start());
+        }
     }
     if( theServer )
         HTTP_ServerStart(theServer);

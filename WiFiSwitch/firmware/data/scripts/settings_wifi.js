@@ -5,7 +5,7 @@ import {EnableController} from "./controllers/enable_controller.js";
 class WiFiSettingsPageController extends FormPageController{
     constructor(theEl){
         super(theEl);
-        this._m_IsSingleInt = true;
+        this._m_IsSingleInt = false;
     }
 
 
@@ -38,6 +38,13 @@ class WiFiSettingsPageController extends FormPageController{
         anAPElArray.push(anAPNet);
         anAPElArray.push(anAPGw);
         this._m_FixedAPIp = new EnableController(anAPIsFixedIPEl,anAPElArray);
+
+        let anAPAfterEl = this._m_BaseElement.querySelector("#st_is_ap_after");
+        let aStAttemptCntEl = this._m_BaseElement.querySelector("#st_attempts");
+        let anAPAfterArray = [];
+        anAPAfterArray.push(aStAttemptCntEl);
+        this._m_APAfter = new EnableController(anAPAfterEl,anAPAfterArray);
+
         await super.setPageParameters(theInfo);
         if( this._m_IsSingleInt ){
             let anAPCheckBox = this._m_BaseElement.querySelector("#access_point_type");
@@ -50,6 +57,7 @@ class WiFiSettingsPageController extends FormPageController{
         this._updateInterfaces();
         this._m_FixedStIp.update();
         this._m_FixedAPIp.update();
+        this._m_APAfter.update();
     }
 
     _onAPType(){

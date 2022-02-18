@@ -47,6 +47,7 @@
 #define ST_IP_KEYWORD           "st_ip"
 #define ST_NETMASK_KEYWOR       "st_netmask"
 #define ST_GATEWAY_KEYWORD      "st_gateway"
+#define ST_IS_AP_AFTER_KEYWORD  "st_is_ap_after"
 #define ST_ATTEMPTS_KEYWORD     "st_attempts"
 
 static const char WiFiSettingTemplate[] = "{"\
@@ -64,6 +65,7 @@ static const char WiFiSettingTemplate[] = "{"\
     "\"st_ip\": \"%d.%d.%d.%d\","\
     "\"st_netmask\":\"%d.%d.%d.%d\","\
     "\"st_gateway\":\"%d.%d.%d.%d\","\
+    "\"st_is_ap_after\":\"%s\","\
     "\"st_attempts\": %d"\
     "}";
 
@@ -71,23 +73,24 @@ static const char WiFiSettingTemplate[] = "{"\
 
 void CFG_WiFiInit(WiFiConfig* theConfig)
 {
-    theConfig->m_StConn.m_IsEnabled = true;
-    strcpy(theConfig->m_StConn.m_SSID, DEFAULT_ST_SSID);
-    strcpy(theConfig->m_StConn.m_Password, DEFAULT_ST_PASSWORD);
-    theConfig->m_StConn.m_IsFixedIP = true;
-    theConfig->m_StConn.m_Ip[0] = ST_IP_0;
-    theConfig->m_StConn.m_Ip[1] = ST_IP_1;
-    theConfig->m_StConn.m_Ip[2] = ST_IP_2;
-    theConfig->m_StConn.m_Ip[3] = ST_IP_3;
-    theConfig->m_StConn.m_NetMask[0] = ST_MASK_0;
-    theConfig->m_StConn.m_NetMask[1] = ST_MASK_1;
-    theConfig->m_StConn.m_NetMask[2] = ST_MASK_2;
-    theConfig->m_StConn.m_NetMask[3] = ST_MASK_3;
-    theConfig->m_StConn.m_Gateway[0] = ST_GATE_0;
-    theConfig->m_StConn.m_Gateway[1] = ST_GATE_1;
-    theConfig->m_StConn.m_Gateway[2] = ST_GATE_2;
-    theConfig->m_StConn.m_Gateway[3] = ST_GATE_3;
-    theConfig->m_StAttemptsCount = ST_ATTEMPTS_COUNT;
+    theConfig->m_StConn.m_Connection.m_IsEnabled = true;
+    strcpy(theConfig->m_StConn.m_Connection.m_SSID, DEFAULT_ST_SSID);
+    strcpy(theConfig->m_StConn.m_Connection.m_Password, DEFAULT_ST_PASSWORD);
+    theConfig->m_StConn.m_Connection.m_IsFixedIP = true;
+    theConfig->m_StConn.m_Connection.m_Ip[0] = ST_IP_0;
+    theConfig->m_StConn.m_Connection.m_Ip[1] = ST_IP_1;
+    theConfig->m_StConn.m_Connection.m_Ip[2] = ST_IP_2;
+    theConfig->m_StConn.m_Connection.m_Ip[3] = ST_IP_3;
+    theConfig->m_StConn.m_Connection.m_NetMask[0] = ST_MASK_0;
+    theConfig->m_StConn.m_Connection.m_NetMask[1] = ST_MASK_1;
+    theConfig->m_StConn.m_Connection.m_NetMask[2] = ST_MASK_2;
+    theConfig->m_StConn.m_Connection.m_NetMask[3] = ST_MASK_3;
+    theConfig->m_StConn.m_Connection.m_Gateway[0] = ST_GATE_0;
+    theConfig->m_StConn.m_Connection.m_Gateway[1] = ST_GATE_1;
+    theConfig->m_StConn.m_Connection.m_Gateway[2] = ST_GATE_2;
+    theConfig->m_StConn.m_Connection.m_Gateway[3] = ST_GATE_3;
+    theConfig->m_StConn.m_StAttemptsCount = ST_ATTEMPTS_COUNT;
+    theConfig->m_StConn.m_IsConnectAPAfter = ST_CONNECT_AP_AFTER;
 
     theConfig->m_APConn.m_IsEnabled = false;
     strcpy(theConfig->m_APConn.m_SSID, DEFAULT_AP_SSID);
@@ -107,15 +110,6 @@ void CFG_WiFiInit(WiFiConfig* theConfig)
     theConfig->m_APConn.m_Gateway[3] = AP_GATE_3;
 }
 
-#define IS_ST_KEYWORD           "is_st"
-#define ST_SSID_KEYWORD         "st_ssid"
-#define ST_PWD_KEYWORD          "st_pwd"
-#define ST_FIXED_IP_KEYWORD     "st_fixed_ip"
-#define ST_IP_KEYWORD           "st_ip"
-#define ST_NETMASK_KEYWOR       "st_netmask"
-#define ST_GATEWAY_KEYWORD      "st_gateway"
-#define ST_ATTEMPTS_KEYWORD     "st_attempts"
-
 esp_err_t CFG_WiFiParseSettings(WiFiConfig* theConfig, cJSON* theJSON, bool isFullSet)
 {
     WiFiConfig aConfig = *theConfig;
@@ -123,8 +117,9 @@ esp_err_t CFG_WiFiParseSettings(WiFiConfig* theConfig, cJSON* theJSON, bool isFu
     if( isFullSet ){
         aConfig.m_APConn.m_IsEnabled = false;
         aConfig.m_APConn.m_IsFixedIP = false;
-        aConfig.m_StConn.m_IsEnabled = false;
-        aConfig.m_StConn.m_IsFixedIP = false;
+        aConfig.m_StConn.m_Connection.m_IsEnabled = false;
+        aConfig.m_StConn.m_Connection.m_IsFixedIP = false;
+        aConfig.m_StConn.m_IsConnectAPAfter = false;
     }
     cJSON* aDataItem = theJSON->child;
     while( aDataItem != NULL ){
@@ -171,43 +166,43 @@ esp_err_t CFG_WiFiParseSettings(WiFiConfig* theConfig, cJSON* theJSON, bool isFu
             }
         }
         else if(strcmp( aDataItem->string, IS_ST_KEYWORD) == 0 ){
-            aRes = JSU_ConverBool(aDataItem, &aConfig.m_StConn.m_IsEnabled);
+            aRes = JSU_ConverBool(aDataItem, &aConfig.m_StConn.m_Connection.m_IsEnabled);
             if( aRes != ESP_OK ){
                 return aRes;
             }
         }
         else if(strcmp( aDataItem->string, ST_SSID_KEYWORD) == 0 ){
-            aRes = JSU_ConverString(aDataItem, aConfig.m_StConn.m_SSID, MAX_SSID_SIZE);
+            aRes = JSU_ConverString(aDataItem, aConfig.m_StConn.m_Connection.m_SSID, MAX_SSID_SIZE);
             if( aRes != ESP_OK ){
                 return aRes;
             }
         }     
         else if(strcmp( aDataItem->string, ST_PWD_KEYWORD) == 0 ){
-            aRes = JSU_ConverString(aDataItem, aConfig.m_StConn.m_Password, MAX_PASSWORD_SIZE);
+            aRes = JSU_ConverString(aDataItem, aConfig.m_StConn.m_Connection.m_Password, MAX_PASSWORD_SIZE);
             if( aRes != ESP_OK ){
                 return aRes;
             }
         }     
         else if(strcmp( aDataItem->string, ST_FIXED_IP_KEYWORD) == 0 ){
-            aRes = JSU_ConverBool(aDataItem, &aConfig.m_StConn.m_IsFixedIP);
+            aRes = JSU_ConverBool(aDataItem, &aConfig.m_StConn.m_Connection.m_IsFixedIP);
             if( aRes != ESP_OK ){
                 return aRes;
             }
         }     
         else if(strcmp( aDataItem->string, ST_IP_KEYWORD) == 0 ){
-            aRes = JSU_ConvertIP(aDataItem, aConfig.m_StConn.m_Ip);
+            aRes = JSU_ConvertIP(aDataItem, aConfig.m_StConn.m_Connection.m_Ip);
             if( aRes != ESP_OK ){
                 return aRes;
             }
         }     
         else if(strcmp( aDataItem->string, ST_NETMASK_KEYWOR) == 0 ){
-            aRes = JSU_ConvertIP(aDataItem, aConfig.m_StConn.m_NetMask);
+            aRes = JSU_ConvertIP(aDataItem, aConfig.m_StConn.m_Connection.m_NetMask);
             if( aRes != ESP_OK ){
                 return aRes;
             }
         }
         else if(strcmp( aDataItem->string, ST_GATEWAY_KEYWORD) == 0 ){
-            aRes = JSU_ConvertIP(aDataItem, aConfig.m_StConn.m_Gateway);
+            aRes = JSU_ConvertIP(aDataItem, aConfig.m_StConn.m_Connection.m_Gateway);
             if( aRes != ESP_OK ){
                 return aRes;
             }
@@ -218,7 +213,13 @@ esp_err_t CFG_WiFiParseSettings(WiFiConfig* theConfig, cJSON* theJSON, bool isFu
             if( aRes != ESP_OK ){
                 return aRes;
             }
-            aConfig.m_StAttemptsCount = (uint8_t)aVal;
+            aConfig.m_StConn.m_StAttemptsCount = (uint8_t)aVal;
+        }
+        else if(strcmp( aDataItem->string, ST_IS_AP_AFTER_KEYWORD) == 0 ){
+            aRes = JSU_ConverBool(aDataItem, &aConfig.m_StConn.m_IsConnectAPAfter);
+            if( aRes != ESP_OK ){
+                return aRes;
+            }
         }    
         aDataItem = aDataItem->next;
     }
@@ -232,17 +233,21 @@ esp_err_t CFG_WiFiGetSettingsString(WiFiConfig* theConfig, char* theBuffer)
     if( !theConfig->m_APConn.m_IsEnabled ){
         isAPStr = OFF_VALUE;
     }
-    char* isSTStr = ON_VALUE;
-    if( !theConfig->m_StConn.m_IsEnabled ){
-        isSTStr = OFF_VALUE;
-    }
-    char* isSTFixedIPStr = ON_VALUE;
-    if( !theConfig->m_StConn.m_IsFixedIP ){
-        isSTFixedIPStr = OFF_VALUE;
-    }
     char* isAPFixedIPStr = ON_VALUE;
     if( !theConfig->m_APConn.m_IsFixedIP ){
         isAPFixedIPStr = OFF_VALUE;
+    }
+    char* isSTStr = ON_VALUE;
+    if( !theConfig->m_StConn.m_Connection.m_IsEnabled ){
+        isSTStr = OFF_VALUE;
+    }
+    char* isSTFixedIPStr = ON_VALUE;
+    if( !theConfig->m_StConn.m_Connection.m_IsFixedIP ){
+        isSTFixedIPStr = OFF_VALUE;
+    }
+    char* isAPAfterStr = ON_VALUE;
+    if(!theConfig->m_StConn.m_IsConnectAPAfter){
+        isAPAfterStr = OFF_VALUE;
     }
     sprintf(theBuffer, WiFiSettingTemplate,
         isAPStr,
@@ -253,13 +258,14 @@ esp_err_t CFG_WiFiGetSettingsString(WiFiConfig* theConfig, char* theBuffer)
         theConfig->m_APConn.m_NetMask[0], theConfig->m_APConn.m_NetMask[1], theConfig->m_APConn.m_NetMask[2], theConfig->m_APConn.m_NetMask[3],
         theConfig->m_APConn.m_Gateway[0], theConfig->m_APConn.m_Gateway[1], theConfig->m_APConn.m_Gateway[2], theConfig->m_APConn.m_Gateway[3],
         isSTStr,
-        theConfig->m_StConn.m_SSID,
-        theConfig->m_StConn.m_Password,
+        theConfig->m_StConn.m_Connection.m_SSID,
+        theConfig->m_StConn.m_Connection.m_Password,
         isSTFixedIPStr,
-        theConfig->m_StConn.m_Ip[0], theConfig->m_StConn.m_Ip[1], theConfig->m_StConn.m_Ip[2], theConfig->m_StConn.m_Ip[3],
-        theConfig->m_StConn.m_NetMask[0], theConfig->m_StConn.m_NetMask[1], theConfig->m_StConn.m_NetMask[2], theConfig->m_StConn.m_NetMask[3],
-        theConfig->m_StConn.m_Gateway[0], theConfig->m_StConn.m_Gateway[1], theConfig->m_StConn.m_Gateway[2], theConfig->m_StConn.m_Gateway[3],
-        theConfig->m_StAttemptsCount
+        theConfig->m_StConn.m_Connection.m_Ip[0], theConfig->m_StConn.m_Connection.m_Ip[1], theConfig->m_StConn.m_Connection.m_Ip[2], theConfig->m_StConn.m_Connection.m_Ip[3],
+        theConfig->m_StConn.m_Connection.m_NetMask[0], theConfig->m_StConn.m_Connection.m_NetMask[1], theConfig->m_StConn.m_Connection.m_NetMask[2], theConfig->m_StConn.m_Connection.m_NetMask[3],
+        theConfig->m_StConn.m_Connection.m_Gateway[0], theConfig->m_StConn.m_Connection.m_Gateway[1], theConfig->m_StConn.m_Connection.m_Gateway[2], theConfig->m_StConn.m_Connection.m_Gateway[3],
+        isAPAfterStr,
+        theConfig->m_StConn.m_StAttemptsCount
         );
     return ESP_OK;
 }

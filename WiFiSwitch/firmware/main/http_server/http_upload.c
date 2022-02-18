@@ -28,7 +28,9 @@
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
 
-#include "mpp_file_uploader.h"
+#include <mpp_file_uploader.h>
+
+#include <switch_board.h>
 
 #include "../common_def.h"
 #include "../ota.h"
@@ -251,7 +253,6 @@ esp_err_t HTTP_UploadFile(httpd_req_t *req)
     }
  
     ESP_LOGI(TAG, "File/Firmware reception complete with status %d. Restart", aRes);
-    vTaskDelay(UPLOAD_COMPLETE_DELAY/portTICK_PERIOD_MS);
-    esp_restart();
+    SWB_reset();
     return ESP_OK;
 }

@@ -44,6 +44,7 @@ function getWiFiSettings(){
     "st_ip": "192.168.1.70",
     "st_netmask":"255.255.0.0",
     "st_gateway":"192.168.2.2",
+    "st_is_ap_after":"on",
     "st_attempts": "5"
   };
   return JSON.stringify(aWiFiSettings)

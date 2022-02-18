@@ -72,6 +72,7 @@
 #define ST_GATE_2               0
 #define ST_GATE_3               1
 #define ST_ATTEMPTS_COUNT       7
+#define ST_CONNECT_AP_AFTER     true
 
 #define DEFAULT_AP_SSID         "Datcha"
 #define DEFAULT_AP_PASSWORD     "11111111"

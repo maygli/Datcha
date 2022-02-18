@@ -126,7 +126,7 @@ esp_err_t CFG_Init(BoardConfig* theConfig)
     return ESP_OK;
 }
 
-ConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig)
+StConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig)
 {
     return &theConfig->m_WiFiConfig.m_StConn;
 }

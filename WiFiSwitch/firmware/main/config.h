@@ -40,7 +40,7 @@ typedef struct _BoardConfig{
 } BoardConfig;
 
 esp_err_t CFG_Init(BoardConfig* theConfig);
-ConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig);
+StConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig);
 ConnectionInfo* CFG_GetAPConnection(BoardConfig* theConfig);
 esp_err_t CFG_ParseWiFiSettings(BoardConfig* theConfig, cJSON* theJSON, bool isFullSet);
 esp_err_t CFG_ParseSwitchSettings(BoardConfig* theConfig, cJSON* theJSON, bool isFullSet);

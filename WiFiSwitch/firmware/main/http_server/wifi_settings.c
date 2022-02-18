@@ -22,12 +22,15 @@
 
 #include <esp_log.h>
 
+#include <switch_board.h>
+
 #include "http_server.h"
 #include "http_utils.h"
 #include "wifi_settings.h"
 #include "../config.h"
 
 #define MAX_WIFI_JSON_SIZE 768
+#define WIFI_SETTINGS_COMPLETE_DELAY 1000
 
 static const char TAG[] = "wifi_settings";
 
@@ -48,7 +51,8 @@ esp_err_t HTTP_SetWiFiSettings(httpd_req_t *req)
     else{
         httpd_resp_send_chunk(req, NULL, 0);    
     }
-    cJSON_Delete(aRootJson); 
+    cJSON_Delete(aRootJson);
+    SWB_reset();
     return aRetVal;
 }
 

@@ -45,10 +45,15 @@ typedef struct _ConnectionInfo{
   uint8_t   m_Gateway[IP_SIZE];  
 } ConnectionInfo;
 
+typedef struct _StConnectionInfo{
+    ConnectionInfo  m_Connection;
+    bool            m_IsConnectAPAfter;
+    uint8_t         m_StAttemptsCount;
+} StConnectionInfo;
+
 typedef struct _WiFiConfig{
-  ConnectionInfo  m_APConn;
-  ConnectionInfo  m_StConn;
-  uint8_t         m_StAttemptsCount;
+  ConnectionInfo    m_APConn;
+  StConnectionInfo  m_StConn;
 } WiFiConfig;
 
 void CFG_WiFiInit(WiFiConfig* theConfig);
