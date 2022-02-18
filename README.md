@@ -9,3 +9,4 @@ The main tasks:
 Hardware
 --------
 All controllers based on esp8266. Server based on esp32.  
+<img src="docs/switch_on_small.jpg"/>
