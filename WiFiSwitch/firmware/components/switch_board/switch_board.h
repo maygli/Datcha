@@ -39,6 +39,7 @@ void        SWB_setOnBrightness(uint8_t theVal);
 void        SWB_setOffBrightness(uint8_t theVal);
 void        SWB_soundOn(bool theVal);
 void        SWB_setStyle(uint8_t theStyle);
+void        SWB_reset();
 
 #ifdef __cplusplus
 }

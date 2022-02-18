@@ -30,6 +30,7 @@
 #include <semphr.h>
 
 #include <esp_log.h>
+#include <esp_system.h>    
 
 #include "board_config.h"
 #include "led.h"
@@ -45,6 +46,7 @@ static const char TAG[] = "switch_board";
 // PWM period is 125 Hz
 #define PWM_PERIOD 1000
 #define UPDATE_PERIOD 20
+#define RESET_DEALY 1000
 
 typedef struct _SwitchBoard{
     LED         	    m_OnLED;
@@ -118,6 +120,10 @@ void SWB_switchBoardTask(void *arg)
               pwm_start();
               break;
             }
+            case CC_RESET:
+                vTaskDelay(RESET_DEALY/portTICK_PERIOD_MS);
+                esp_restart();
+                break;
             }
             vTaskDelay(100 / portTICK_RATE_MS);
         }
@@ -169,6 +175,14 @@ void SWB_setStyle(uint8_t theStyle)
     SwitchCommand aCmd;
     aCmd.m_Command = CC_STYLE;
     aCmd.m_Parameter = theStyle;
+    xQueueSend(aBoard.m_Queue, &aCmd, NULL);
+}
+
+void SWB_reset()
+{
+    SwitchCommand aCmd;
+    aCmd.m_Command = CC_RESET;
+    aCmd.m_Parameter = 0;
     xQueueSend(aBoard.m_Queue, &aCmd, NULL);
 }
 

@@ -25,7 +25,7 @@
 typedef enum _CommandCode{
   CC_SWITCH_OFF=0, CC_SWITCH_ON=1, CC_SWITCH_REV=2, 
   CC_OFF_LED_BR=3, CC_ON_LED_BR=4, CC_STYLE=5,
-  CC_SOUND_ON=6	
+  CC_SOUND_ON=6, CC_RESET=7	
 } CommandCode;
 
 typedef struct _SwitchCommand{
