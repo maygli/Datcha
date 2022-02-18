@@ -8,5 +8,6 @@ The main tasks:
 
 Hardware
 --------
-All controllers based on esp8266. Server based on esp32.  
+All controllers based on esp8266. Server based on esp32.
+<img src="./WiFiSwitch/docs/boards_small.jpg" width="300"/>
 <img src="./WiFiSwitch/docs/switch_on_small.jpg" width="300"/>
