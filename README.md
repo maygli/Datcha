@@ -20,3 +20,5 @@ Circuits diagramm can be found at https://easyeda.com/mmaygli/wifiswitchcontroll
 Firmware
 --------
 Can be found at WiFiSwitch/firmware. Consist of two parts. Firmware itself (folders main and components). This part is written in C language under Espressif IDF. Second part is WebApplication (folder WiFiSwitch/firmware/data). It is too slow to debug Web application using esp microcontroller so http server based on node.js and express was implemented (folder WiFiSwitch/firmware/debug/nodejs_server)
+
+<img src="./WiFiSwitch/docs/WiFiSwitchSettingsWiFi.png" width="500"/>
