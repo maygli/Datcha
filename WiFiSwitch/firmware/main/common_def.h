@@ -58,11 +58,11 @@
 #define AP_MAX_STA_CONN         4
 
 #define DEFAULT_ST_SSID         "MaygliHome"
-#define DEFAULT_ST_PASSWORD     "22222222"
+#define DEFAULT_ST_PASSWORD     "11111111"
 #define ST_IP_0                 192
 #define ST_IP_1                 168
 #define ST_IP_2                 0
-#define ST_IP_3                 100
+#define ST_IP_3                 105
 #define ST_MASK_0               255
 #define ST_MASK_1               255
 #define ST_MASK_2               255
@@ -74,12 +74,12 @@
 #define ST_ATTEMPTS_COUNT       7
 #define ST_CONNECT_AP_AFTER     true
 
-#define DEFAULT_AP_SSID         "Datcha"
+#define DEFAULT_AP_SSID         "Datcha5"
 #define DEFAULT_AP_PASSWORD     "11111111"
 #define AP_IP_0                 192
 #define AP_IP_1                 168
 #define AP_IP_2                 1
-#define AP_IP_3                 54
+#define AP_IP_3                 105
 #define AP_MASK_0               255
 #define AP_MASK_1               255
 #define AP_MASK_2               255
@@ -87,7 +87,7 @@
 #define AP_GATE_0               192
 #define AP_GATE_1               168
 #define AP_GATE_2               1
-#define AP_GATE_3               54
+#define AP_GATE_3               105
 
 #define DEFAULT_ON_BRIGNESS      99
 #define DEFAULT_OFF_BRIGNESS     95

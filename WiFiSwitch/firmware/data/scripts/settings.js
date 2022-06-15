@@ -10,7 +10,8 @@ import {MainMenu} from "./main_menu.js"
 
 export async function onInit()
 {
-  let language = navigator.languages ? navigator.languages[0] : (navigator.language || navigator.userLanguage);
+//  let language = navigator.languages ? navigator.languages[0] : (navigator.language || navigator.userLanguage);
+  let language = "en";
   i18next.init({
       lng: language,
       debug: true,

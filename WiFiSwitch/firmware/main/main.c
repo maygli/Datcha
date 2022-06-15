@@ -22,25 +22,27 @@
 
 #include <sys/param.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_system.h"
-#include "esp_log.h"
-#include "nvs.h"
-#include "nvs_flash.h"
-#include "esp_vfs.h"
-#include "esp_vfs_fat.h"
-#include "esp_event.h"
-#include "esp_netif.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <esp_system.h>
+#include <esp_log.h>
+#include <nvs.h>
+#include <nvs_flash.h>
+#include <esp_vfs.h>
+#include <esp_vfs_fat.h>
+#include <esp_event.h>
+#include <esp_netif.h>
 
-#include "switch_board.h"
-#include "switch_command.h"
+#include <switch_board.h>
+#include <meteo_board.h>
+#include <switch_command.h>
+
 #include "wifi.h"
 #include "http_server/http_server.h"
 #include "common_def.h"
 #include "updater.h"
-
 #include "switch_command.h"
+#include "udp.h"
 
 static const char *TAG="APP";
 
@@ -91,6 +93,7 @@ void app_main()
     s_Server.m_BoardConfig = &s_BoardConfig;
 
     xTaskCreate(SWB_switchBoardTask, "switch_task", 2048, NULL, 10, NULL);
+    xTaskCreate(Meteo_Task, "temperature", 4096, NULL, 10, NULL);
 
     initInternalFlash();
  //   test_fat();
@@ -98,4 +101,5 @@ void app_main()
     ESP_ERROR_CHECK(CFG_Init(&s_BoardConfig));
 
     ESP_ERROR_CHECK(WiFi_Connect(&s_Server, &s_BoardConfig));
+//    xTaskCreate(udp_ServerTask, "udp_server", 4096, NULL, 5, NULL);
 }

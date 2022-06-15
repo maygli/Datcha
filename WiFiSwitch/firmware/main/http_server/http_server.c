@@ -34,6 +34,7 @@
 #include "wifi_settings.h"
 #include "http_server.h"
 #include "board_info.h"
+#include "meteo_info.h"
 
 //Requests
 #define SWITCH_STATE    "/switch_state"
@@ -41,6 +42,7 @@
 #define SWITCH_SETTINGS "/switch_settings"
 #define WIFI_SETTINGS   "/wifi_settings"
 #define BOARD_INFO      "/board_info"
+#define METEO_STATE     "/meteo_state"
 
 static const char SERVER_TAG[]="server";
 
@@ -86,6 +88,14 @@ esp_err_t HTTP_ServerStart(HTTPServer* theServer)
         .user_ctx  = theServer    // Pass server data as context
     };
     httpd_register_uri_handler(theServer->m_HttpServer, &aGetBoardInfo);
+
+    httpd_uri_t aGetMeteoInfo = {
+        .uri       = METEO_STATE,  // Match all URIs of type /path/to/file
+        .method    = HTTP_GET,
+        .handler   = HTTP_GetMeteoInfo,
+        .user_ctx  = theServer    // Pass server data as context
+    };
+    httpd_register_uri_handler(theServer->m_HttpServer, &aGetMeteoInfo);
 
     httpd_uri_t aGetSwitchState = {
         .uri       = SWITCH_STATE,  // Match all URIs of type /path/to/file

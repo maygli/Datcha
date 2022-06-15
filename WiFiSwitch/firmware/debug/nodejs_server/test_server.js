@@ -50,6 +50,21 @@ function getWiFiSettings(){
   return JSON.stringify(aWiFiSettings)
 }
 
+function getMeteoState(){
+  var aMeteo = {
+    "is_temp" : true, 
+    "temp" : 23.4,
+    "temp_unit_index":0,
+    "is_pressure": true,
+    "pressure": 762,
+    "pressure_unit_index" : 0,
+    "is_humidity" : false,
+    "humidity": 27,
+    "humidity_unit_index" : 0
+  };
+  return JSON.stringify(aMeteo)
+}
+
 app.use(fileUpload())
 app.post('/internal_upload', function(req, res) {
   console.log(req.files);
@@ -98,4 +113,9 @@ app.post("/wifi_settings", function(request, response){
 app.get("/board_info", function(request, response){
     response.send(getBoardConfig());
 });
+
+app.get("/meteo_state", function(request, response){
+    response.send(getMeteoState());
+});
+
 app.listen(3000);
