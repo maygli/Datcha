@@ -1,0 +1,31 @@
+<table>
+    <link rel="stylesheet" href="styles/common.css"></link>
+    <tr>
+      <td>On brigness</td>
+      <td id="on_brigness_slider">
+        <input type="range" min="0" max="100" id="power_control_range" class="slider_range"></input>
+        <input type="number" id="power_control_num" class="slider_input" min="-10" max="10" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>Off brigness</td>
+      <td id="off_brigness_slider">
+        <input type="range" min="0" max="100" id="power_control_range" class="slider_range"></input>
+        <input type="number" id="power_control_num" class="slider_input" min="-10" max="10" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>Sound</td>
+      <td><img src="images/sound_on.png" class="button" id="sound_image"/></td>
+    </tr>
+    <tr>
+      <td>Style</td>
+      <td id="switch_style">
+        <button class="combobox_btn" data-controller_item="ComboBoxButton"><img src="images/on_off1.png"/></button>
+        <div class="combobox-content" data-controller_item="ComboBoxContent">
+          <div class="combobox-item" data-controller_item="ComboBoxItem" data-controller_item_data="0"><img src="images/on_off1.png"/></div>
+          <div class="combobox-item" data-controller_item="ComboBoxItem" data-controller_item_data="1"><img src="images/on_off2.png"/></div>
+        </div>
+      </td>
+    </tr>
+ </table>

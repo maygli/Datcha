@@ -25,13 +25,23 @@
 #include <dirent.h>
 #include <string.h>
 
-#include "esp_err.h"
-#include "esp_log.h"
+#include "FreeRTOS.h"
+#include <task.h>
+
+#include <esp_err.h>
+#include <esp_log.h>
+#include <esp_system.h>
+
+#include <esp_ota_ops.h>
+#include <esp_partition.h>
 
 #include "common_def.h"
 #include "file_system_utils.h"
 #include "tarextractor.h"
 #include "updater.h"
+#include "ota.h"
+
+#define OTA_COPY_BUFFER_SIZE 512
 
 static const char UPDATER_TAG[]="updater";
 
@@ -84,7 +94,7 @@ esp_err_t upd_CopyUploaded()
           continue;
         }
         if( strcmp(de->d_name, FIRMWARE_FILE_NAME) == 0 ){
-/* Firmware file found */
+/* Firmware file found. Do nothing. Process OTA at the end of copy process */
           ESP_LOGI(UPDATER_TAG,"Firmware file found");
           continue;
         }
@@ -112,10 +122,42 @@ esp_err_t upd_CopyUploaded()
     return ESP_OK;
 }
 
+esp_err_t upd_UpdateFirmware(char* theFileName)
+{
+  FILE* aFirmwareFile = fopen(theFileName,"r");
+  if( aFirmwareFile == NULL ){
+    ESP_LOGE(UPDATER_TAG,"Can't open firmware file %s", theFileName);
+    return ESP_FAIL;
+  }
+  esp_ota_handle_t    anOTAHandle;
+  esp_partition_t*    aPartition;
+  esp_err_t aRes = ESP_OK;
+  aRes = OTA_Start(&anOTAHandle, &aPartition);
+  if( aRes != ESP_OK )
+    return aRes;
+  int aReadSize;
+  char aBuffer[OTA_COPY_BUFFER_SIZE];
+  do{
+      aReadSize = fread(aBuffer,1,OTA_COPY_BUFFER_SIZE, aFirmwareFile);
+      if( aReadSize > 0 ){
+        aRes = OTA_Write(anOTAHandle, aBuffer, OTA_COPY_BUFFER_SIZE);
+        if( aRes != ESP_OK )
+          break;
+      }
+  } while(aReadSize > 0 );
+  fclose(aFirmwareFile);
+  if( aRes == ESP_OK ){
+    aRes = OTA_WriteOTAComplete(anOTAHandle, aPartition);
+  }
+  unlink(theFileName);
+  return aRes;
+}
+
 esp_err_t upd_ProcessUploaded()
 {
   bool isClear;
   esp_err_t aRes;
+  struct stat aStat;
   FILE* aComplFile = fopen(COMPLETE_FILE_PATH,"r");
   if( aComplFile == NULL ){
     ESP_LOGE(UPDATER_TAG,"Can't open 'complete' file");
@@ -142,6 +184,12 @@ esp_err_t upd_ProcessUploaded()
     ESP_LOGE(UPDATER_TAG,"Can't copy files from upload dir");
     return aRes;
   }
+  bool isNeedRestart = false;
+  if( stat(FIRMWARE_FILE_PATH, &aStat) == ESP_OK ){
+//Firmware file found - update firmware
+    aRes = upd_UpdateFirmware(FIRMWARE_FILE_PATH);
+    isNeedRestart = true;    
+  }
   aRes = FSU_RmTree(UPLOAD_DIR);
   if( aRes != ESP_OK ){
     ESP_LOGE(UPDATER_TAG,"Can't remove upload dir");
@@ -150,6 +198,10 @@ esp_err_t upd_ProcessUploaded()
   aRes = mkdir(UPLOAD_DIR,  0777);
   if( aRes != ESP_OK ){
     ESP_LOGE(UPDATER_TAG, "Can't create folder %s", UPLOAD_DIR);
+  }
+  if( isNeedRestart ){
+    vTaskDelay(UPLOAD_COMPLETE_DELAY/portTICK_PERIOD_MS);
+    esp_restart();
   }
   return ESP_OK;
 }
@@ -164,14 +216,12 @@ esp_err_t UPD_Process()
     aRes = upd_ProcessUploaded();
     if( aRes != ESP_OK ){
       ESP_LOGE(UPDATER_TAG,"Can't process upload");
-      FSU_RmTree(UPLOAD_DIR);
     }
   }
   else{
-//Just clear remove upload folder and create default structure
+//Just clear upload folder and create default structure
     ESP_LOGI(UPDATER_TAG,"'complete' file not found. Create default tree");
-    FSU_RmTree(UPLOAD_DIR);
   }
-
+  FSU_RmTree(UPLOAD_DIR);
   return upd_createDefaultFolders();
 }

@@ -1,0 +1,40 @@
+<head>
+    <meta charset="utf-8">
+    <title>Datcha WiFi switch</title>
+    <script src="translations/ru.js" type="text/javascript"></script>
+    <script src="scripts/i18next.js" type="text/javascript"></script>
+  <!--   <script src="scripts/page_controller.js" type="text/javascript"></script>
+    <script src="scripts/manta_common.js" type="text/javascript"></script>
+    <script src="scripts/manta_index.js" type="text/javascript"></script>
+    <script src="scripts/manta_settings_upgrade.js" type="text/javascript"></script>
+    <script src="scripts/manta_settings_info.js" type="text/javascript"></script>
+    <script src="scripts/manta_settings_wifi.js" type="text/javascript"></script>
+    <script src="scripts/manta_settings_sd.js" type="text/javascript"></script>
+    <script src="scripts/password_controller.js" type="text/javascript"></script> -->
+    <script type="module">
+        import {onInit} from "./scripts/settings.js";
+        window.addEventListener("load",onInit);
+    </script>
+</head>
+<boby>
+    <link rel="stylesheet" href="styles/common.css"></link>
+    <div class="device_title">
+        <h2 id="boardname_id">Board name</h2>
+        <h2 id="hardware_version_id">v1.1</h2>
+    </div>
+    <div class="topnav" id="main_menu">
+      <div class="menu_item active" id="menu_general" data-controller_item="menu_item"><img src="images/home.png"><span data-i18n="general"></span></div>
+      <div class="menu_item" id="menu_wifi" data-controller_item="menu_item"><img src="images/wifi.png"><span data-i18n="wifi"></span></div>
+      <div class="menu_item" id="menu_mqtt" data-controller_item="menu_item"><img src="images/mqtt.png"><span data-i18n="mqtt"></span></div>
+      <div class="menu_item" id="menu_upgrade" data-controller_item="menu_item"><img src="images/upload.png"><span data-i18n="update"></span></div>
+      <div class="menu_item" id="menu_about" data-controller_item="menu_item"><img src="images/info.png"><span data-i18n="about"></span></div>
+    </div>
+    <div id="pages">
+        <div class="page_content" id="page_general" data-controller_class="MainPageController"  data-controller_url="settings_switch.html" data-controller_request="switch_settings"></div>
+        <div class="page_content" id="page_wifi" data-controller_class="WiFiPageController"  data-controller_url="settings_wifi.html" data-controller_request="wifi_settings"></div>
+        <div class="page_content" id="page_mqtt" data-controller_class="WiFiPageController"  data-controller_url="settings_mqtt.html" data-controller_request="mqtt_settings"></div>
+        <div class="page_content" id="page_upgrade" data-controller_class="UpgradeController"  data-controller_url="settings_upgrade.html"></div>
+        <div class="page_content" id="page_about" data-controller_class="AboutPageController"  data-controller_url="settings_about.html" data-controller_request="board_info"></div>
+    </div>
+    <footer class="device_title footer" id="main_footer_id">Maygli</footer>
+</body>

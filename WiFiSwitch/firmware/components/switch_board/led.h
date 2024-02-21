@@ -23,14 +23,17 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum _LEDState{ LS_ON, LS_OFF } LEDState;
-typedef enum _LEDTransition{ LT_NONE, LT_ON, LT_OFF} LEDTransition;
+typedef enum _LEDTransition{ LT_NONE, LT_TRANS} LEDTransition;
 
 /* LED */
 typedef struct _LED{
 /* Brightness (0-100) */   
-    uint32_t        m_Brightness;
+    uint8_t         m_Brightness;
+/* Previous brightnes */    
+    uint8_t         m_PrevBrightness;
 /* LED state (ON/OFF) */    
     LEDState        m_State;
 /* PWM channel */
@@ -46,9 +49,9 @@ extern "C" {
 #endif
 
 void initLED(LED* theLED, uint32_t theChannel);
-void offLED(LED* theLED);
-void onLED(LED* theLED);
+void setBrightness(LED* theLED, uint8_t m_Brightness);
 void updateLED(LED* theLED);
+void adjustLED(LED* theLED, bool isRestart);
 
 #ifdef __cplusplus
 }

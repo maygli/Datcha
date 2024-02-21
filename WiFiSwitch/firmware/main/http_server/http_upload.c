@@ -22,12 +22,18 @@
 
 #include <stdio.h>
 #include <sys/param.h>
-#include <esp_log.h>
-#include "esp_system.h"    
 
-#include "mpp_file_uploader.h"
+#include <esp_log.h>
+#include <esp_system.h>    
+#include <esp_ota_ops.h>
+#include <esp_partition.h>
+
+#include <mpp_file_uploader.h>
+
+#include <switch_board.h>
 
 #include "../common_def.h"
+#include "../ota.h"
 
 #include "http_upload.h"
 #include "http_server.h"
@@ -37,9 +43,12 @@
 #define TRUE_VALUE "true"
 
 typedef struct _UploadContext{
-    HTTPServer*    m_Server;
-    FILE*          m_SavedFile;
-    bool           m_isClear;
+    HTTPServer*         m_Server;
+    FILE*               m_SavedFile;
+    esp_ota_handle_t    m_OTAHandle;
+    esp_partition_t*    m_OTAPartition;
+    bool                m_isClear;
+    bool                m_isFirmware;
 } UploadContext;
 
 static const char TAG[]="upload_file";
@@ -48,14 +57,33 @@ void http_InitUploadContext(UploadContext* theContext, HTTPServer* theServer)
 {
     theContext->m_Server = theServer;
     theContext->m_SavedFile = NULL;
+    theContext->m_OTAHandle = 0;
+    theContext->m_OTAPartition = NULL;
     theContext->m_isClear = false;
+    theContext->m_isFirmware = false;
 }
 
 int http_OpenFile(char* theFileName, int theNameSize, void* theContext)
 {
-    char aFilePath[MAX_PATH_SIZE];
+    char* aFilePath = malloc(MAX_PATH_SIZE);
+    if( aFilePath == NULL ){
+        ESP_LOGE(TAG,"Can't allocate memory for file path");
+        return ESP_ERR_NO_MEM;
+    }
     int  aPathLen;
+    esp_err_t anErr;
     UploadContext* aContext = (UploadContext*)theContext;
+/*If firmware uploaded then start OTA*/
+    if( strncmp(theFileName, FIRMWARE_FILE_NAME, theNameSize) == 0 ){
+        free(aFilePath);
+        ESP_LOGI(TAG,"Upload firware file");
+        aContext->m_isFirmware = true;
+        anErr = OTA_Start(&aContext->m_OTAHandle, &aContext->m_OTAPartition);
+        if( anErr != ESP_OK )
+            return -1;
+        return 0;
+    }
+    ESP_LOGI(TAG,"Upload regular file");
 /*Copy file to upload folder*/
     strcpy(aFilePath,UPLOAD_DIR);
     aPathLen = strlen(aFilePath);
@@ -65,19 +93,29 @@ int http_OpenFile(char* theFileName, int theNameSize, void* theContext)
     aFilePath[aPathLen+theNameSize] = 0;
     ESP_LOGI(TAG,"Open file %s", aFilePath);
     aContext->m_SavedFile = fopen(aFilePath,"w");
+    free(aFilePath);
     return 0;
 }
 
 int http_GetParameter(char* theName, int theNameSize, char* theData, int theDataSize,  void* theContext)
 {
-    char aNameBuffer[256];
-    char aDataBuffer[256];
+    char* aNameBuffer = malloc(256);
+    if(aNameBuffer == NULL){
+        return ESP_ERR_NO_MEM;
+    }
+    char* aDataBuffer = malloc(256);
+    if( aDataBuffer == NULL ){
+        free(aNameBuffer);
+        return ESP_ERR_NO_MEM;
+    }
     strncpy(aNameBuffer, theName, theNameSize);
     aNameBuffer[theNameSize] = 0;
     strncpy(aDataBuffer, theData, theDataSize);
     aDataBuffer[theNameSize] = 0;
     UploadContext* aContext = (UploadContext*)theContext;
     ESP_LOGI(TAG,"Found parameter %s=%s", aNameBuffer, aDataBuffer);
+    free(aNameBuffer);
+    free(aDataBuffer);
     if( strncmp(theName, CLEAR_PARAMETER_NAME, theNameSize) == 0 ){
         if(strncmp(theData, TRUE_VALUE, theDataSize) == 0 ){
             ESP_LOGI(TAG,"Clear is set");
@@ -90,6 +128,12 @@ int http_GetParameter(char* theName, int theNameSize, char* theData, int theData
 int http_WriteFileData(char* theDataPtr, int theLen, void* theContext)
 {
     UploadContext* aContext = (UploadContext*)theContext;
+    if( aContext->m_isFirmware ){
+        esp_err_t anErr = OTA_Write(aContext->m_OTAHandle, theDataPtr, theLen);
+        if( anErr != ESP_OK )
+            return -1;
+        return 0;
+    }
     if( aContext->m_SavedFile != NULL ){
         ESP_LOGI(TAG,"Write data to file %d\n", theLen);
         int aWriteCnt = fwrite(theDataPtr, 1, theLen, aContext->m_SavedFile);
@@ -104,20 +148,20 @@ int http_WriteFileData(char* theDataPtr, int theLen, void* theContext)
     return -1;
 }
 
-int http_WriteComplete(bool isClear)
+esp_err_t http_WriteFileComplete(bool isClear)
 {
     FILE* aCompleteFile = fopen(COMPLETE_FILE_PATH,"w");
     if( aCompleteFile == NULL ){
       ESP_LOGE(TAG,"Can't open 'complete' file for write.");
-      return -1;
+      return ESP_FAIL;
     }
     int aCnt = fwrite(&isClear, sizeof(isClear), 1, aCompleteFile);
     if( aCnt != 1 ){
       ESP_LOGE(TAG,"Error write to 'complete' file.");
-      return -1;
+      return ESP_FAIL;
     }
     fclose(aCompleteFile);
-    return 0; 
+    return ESP_OK; 
 }
 
 char* HTTP_GetBound(httpd_req_t *req, char* theBuffer, int* theBoundSize)
@@ -188,11 +232,14 @@ esp_err_t HTTP_ProcessFileUpload(httpd_req_t *req, FileUploader* theFileUploader
 esp_err_t HTTP_UploadFile(httpd_req_t *req)
 {
     ESP_LOGI(TAG,"POST content_len=%d uri='%s'", req->content_len, req->uri);
-    int     aRes;
-    char    aBoundStr[MAX_BOUND_SIZE];
-    int     aBoundSize;
-    FileUploader  aFileUploader;
-    UploadContext anUploadContext;
+    esp_err_t       aRes;
+    char*           aBoundStr = malloc(MAX_BOUND_SIZE);
+    if( aBoundStr == NULL ){
+        return ESP_ERR_NO_MEM;
+    }
+    int             aBoundSize;
+    FileUploader    aFileUploader;
+    UploadContext   anUploadContext;
     
     HTTPServer* aServer = (HTTPServer*)req->user_ctx;
     char *aBuff = aServer->m_FileBuffer;
@@ -210,16 +257,21 @@ esp_err_t HTTP_UploadFile(httpd_req_t *req)
     if( anUploadContext.m_SavedFile != NULL ){
         fclose(anUploadContext.m_SavedFile);
     }
+    free(aBoundStr);
     if( aRes != ESP_OK ){
         return aRes;
     }
     const char aMsg[] = "File successfully uploaded";
     httpd_resp_send(req, aMsg, strlen(aMsg));
 
-    http_WriteComplete(anUploadContext.m_isClear);
-
-    ESP_LOGI(TAG, "File reception complete. Restart");
-    vTaskDelay(UPLOAD_COMPLETE_DELAY/portTICK_PERIOD_MS);
-    esp_restart();
+    if( anUploadContext.m_isFirmware ){
+        aRes = OTA_WriteOTAComplete(anUploadContext.m_OTAHandle, anUploadContext.m_OTAPartition);
+    }
+    else{
+        aRes = http_WriteFileComplete(anUploadContext.m_isClear);
+    }
+ 
+    ESP_LOGI(TAG, "File/Firmware reception complete with status %d. Restart", aRes);
+    SWB_reset();
     return ESP_OK;
 }

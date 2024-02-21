@@ -31,7 +31,6 @@
 #include "cJSON.h"
 
 static const char TAG[]="switch_control";
-static SwitchCommand aCmd;
 
 #define STATE_PARAMETER_NAME "state"
 #define OUT_BUFFER_SIZE 128
@@ -50,8 +49,12 @@ char* http_getJSONParameterValue(cJSON* theJson, char* theParam)
 
 esp_err_t HTTP_GetSwitchState(httpd_req_t *req)
 {
-  char anOutBuffer[OUT_BUFFER_SIZE];
-  SwitchState aState = getBoardState();
+  char* anOutBuffer = malloc(OUT_BUFFER_SIZE);
+  if( anOutBuffer == NULL ){
+    ESP_LOGE(TAG,"Can't allocate memory for switch state");
+    return ESP_ERR_NO_MEM;
+  }
+  SwitchState aState = SWB_getBoardState();
   if( aState == SS_ON ){
     sprintf(anOutBuffer,"{\"state\":\"%s\"}", ON_NAME);
   }
@@ -59,7 +62,8 @@ esp_err_t HTTP_GetSwitchState(httpd_req_t *req)
     sprintf(anOutBuffer,"{\"state\":\"%s\"}", OFF_NAME);
   }
   httpd_resp_send_chunk(req, anOutBuffer, strlen(anOutBuffer));    
-  httpd_resp_send_chunk(req, NULL, 0);    
+  httpd_resp_send_chunk(req, NULL, 0); 
+  free(anOutBuffer);   
   return ESP_OK;
 }
 
@@ -73,17 +77,15 @@ esp_err_t HTTP_SwitchControl(httpd_req_t *req)
 
     cJSON* aRootJSON = HTTP_ReceiveJSON(req);
     if( aRootJSON ){
-      aCmd.m_Command = CC_SWITCH_OFF;
-      aCmd.m_Parameter = 0; 
       char* aStateVal = http_getJSONParameterValue(aRootJSON, STATE_PARAMETER_NAME);
       if( aStateVal ){
         ESP_LOGI(TAG,"Switch state= '%s'", aStateVal);
+        SwitchState aState = SS_OFF;
         if( strcmp(aStateVal, ON_NAME) == 0 ){
-          aCmd.m_Command = CC_SWITCH_ON;
+          aState = SS_ON;
         }
+        SWB_setBoardState(aState);
       }
-      xQueueSend(aServer->m_SwitchQueue, &aCmd, NULL);
-
       httpd_resp_send_chunk(req, NULL, 0);    
       aRes = ESP_OK;
     }

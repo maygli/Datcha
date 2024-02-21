@@ -22,15 +22,18 @@
 #pragma once
 
 #include <esp_http_server.h>
-#include "server_config.h"
 #include <queue.h>
+
+#include "../config.h"
+#include "server_config.h"
+
 
 typedef struct _HTTPServer{
     httpd_handle_t      m_HttpServer;
+    BoardConfig*        m_BoardConfig;
     char                m_FileBuffer[HTTP_BUFFER_SIZE];
     char                m_Path[MAX_PATH_SIZE+1];
     int                 m_BasePathSize;
-    xQueueHandle        m_SwitchQueue;
 } HTTPServer;
 
 #ifdef __cplusplus

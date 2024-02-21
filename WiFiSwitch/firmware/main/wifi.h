@@ -22,15 +22,17 @@
 
 #pragma once
 
-#include "esp_err.h"
+#include <esp_err.h>
 
+#include "config.h"
+#include "restart.h"
 #include "http_server/http_server.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-esp_err_t WiFi_Connect(HTTPServer* theServer);
+esp_err_t WiFi_Connect(HTTPServer* theServer, BoardConfig* theConfig);
 
 #ifdef __cplusplus
 }

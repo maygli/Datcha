@@ -23,32 +23,41 @@
 #pragma once
 
 #include <stdint.h>
-
-#include <semphr.h>
-
-#include "led.h"
-#include "buzzer.h"
-#include "io_out.h"
-#include "io_in.h"
+#include "board_config.h"
 
 typedef enum _SwitchState{ SS_ON, SS_OFF } SwitchState;
+typedef enum _SwitchMode{ SM_NORMAL, SM_FLASh} SwitchMode;
 
-typedef struct _SwitchBoard{
-    LED         	m_OnLED;
-    LED         	m_OffLED;
-    Buzzer      	m_Buzzer;
-    GPIOOut     	m_Relay;
-    GPIOIn      	m_Input;
-    SwitchState 	m_State;
-    xSemaphoreHandle 	m_StateMutex;
-} SwitchBoard;
+typedef enum _NotifyCommand{NC_RESET=0,NC_NONE} NotifyCommand;
+
+typedef enum _StateType{ ST_OFF=0, ST_ON, ST_CONTROL} StateType;
+typedef enum _ControlSource{ CS_EXTERNAL=0, CS_INTERNAL} ControlSource;
+typedef enum _InternalControlSource{ IS_TEMPERATURE, IS_PRESSURE, IS_HUMIDITY} InternalControlSource;
+typedef enum _ControlType{ CT_LESS_LIMIT=0, CT_MORE_LIMIT } ControlType;
+
+typedef struct _Notification{
+    uint8_t     m_Command;
+} Notification;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void switchBoardTask(void *arg);
-SwitchState getBoardState();
+void        SWB_switchBoardTask(void *arg);
+int         SWB_getBoardState();
+void        SWB_setBoardState(int theState);
+#if LED_COUNT == 1
+    void        SWB_setBrightness(uint8_t theState, uint8_t theBrightness);
+#elif LED_COUNT == 2
+    void        SWB_setBrightness(uint8_t theState, uint8_t theBrightness1, uint8_t theBrightness2);
+#else
+    #error Support only LED_COUNT = 1 or 2
+#endif
+void        SWB_soundOn(bool theVal);
+void        SWB_reset();
+void        SWB_MeasureTemperature();
+void        SWB_SetLimit(double theLimit);
+void        SWB_SetValue(double theValue);
 
 #ifdef __cplusplus
 }

@@ -23,7 +23,7 @@
 const char HTTP_DEFAULT_PAGE[]="<!DOCTYPE html>\n\
 <html lang=\"en\">\n\
 <head>\n\
-    <title>Manta Ray GRBL controller</title>\n\
+    <title>Datcha WiFi switch</title>\n\
     <style>\n\
         .manta_title {\n\
             text-align: center;\n\
@@ -120,6 +120,7 @@ const char HTTP_DEFAULT_PAGE[]="<!DOCTYPE html>\n\
             var aStatus = document.getElementById(\"status\");\n\
             aStatus.className = \"normal_msg\";\n\
             var aFile = document.getElementById(\"file\").files[0];\n\
+            document.getElementById(\"file\").value=\"\";\n\
             aFilenameInfo = document.getElementById(\"filename_info\");\n\
             aFilenameInfo.innerHTML = \"File:  <b>\" + aFile.name + \"</b>\";\n\
             if( aFile.name.length > 31 ){\n\
@@ -198,28 +199,28 @@ const char HTTP_DEFAULT_PAGE[]="<!DOCTYPE html>\n\
     </script>\n\
 </head>\n\
 <body>\n\
-    <h1 id=\"manta_title\" class=\"manta_title\">Manta Ray GRBL controller</h1>\n\
+    <h1 id=\"manta_title\" class=\"manta_title\">Datca WiFi switch v1.0.0</h1>\n\
     <div><h2>Please select firmware file to upload to controller</h2></div>\n\
     <p/>\n\
     <button type=\"button\" class=\"collapsible\" id=\"collapsible\" onclick=\"onExpandDesc()\">+ Firmware file description</button>\n\
     <div id=\"content\" hidden=\"true\">\n\
         <hr/>\n\
         <p/>\n\
-             <h3>Firmware file is a zip file which can contains:</h3>\n\
+             <h3>You can download separate files or files and folders packed by tar archivator</h3>\n\
         <p/>   \n\
         <table>\n\
-	    <tr><td><b>controller.bin</b></td><td>Grbl controller firmware</td></tr>\n\
-	    <tr><td><b>grbl.bin</b></td><td>Grbl board firmware</td></tr>\n\
-	    <tr><td><b>config.json</b></td><td>Grbl controller configuration file</td></tr>\n\
-	    <tr><td><b>*<b></td><td>any other html/css/js files related to controller web application</td></tr> \n\
+	    <tr><td><b>firmware.bin</b></td><td>Device firmware</td></tr>\n\
+	    <tr><td><b>config.json</b></td><td>Device settings file</td></tr>\n\
+	    <tr><td><b>*<b></td><td>any other html/css/js files related to web application</td></tr> \n\
         </table>\n\
         <h4>Please pay attantion, filename length shouldn't exceed 32 characters</h4>\n\
+        <h4>Tar file can be prepared by <a href=\"https://www.7-zip.org\">7z</a>\n\
         <hr>\n\
     </div>\n\
     <p/>\n\
     <div>\n\
         <input type=\"checkbox\" name=\"Clear\" id=\"clear\" class=\"button\" checked/>\n\
-        <label for=\"clear\">Clear controller memory before upload</label>\n\
+        <label for=\"clear\">Clear device memory before upload</label>\n\
         <br/>            \n\
         <input type=\"file\" name=\"name\" class=\"input_file\" id=\"file\" onchange=\"onUploadFile()\">\n\
         <label for=\"file\" class=\"button\">Select file</label>\n\

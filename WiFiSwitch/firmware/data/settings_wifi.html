@@ -1,0 +1,73 @@
+<div>
+    <form action="wifi_settings" method="POST">
+        <table>
+            <tr>
+                <td>
+                    <input type="checkbox" id="access_point_type" name="is_ap" value="on"/>
+                    <label for="access_point_type" data-i18n="access_point">Access point</label>
+                </td>
+                <td>
+                    <input type="checkbox" id="station_type" name="is_st" value="on"/>
+                    <label for="station_type" data-i18n="station">Station</label>
+                </td>
+            </tr>
+            <tr>
+                <td class="properties_group" id="ap_group">
+                    <div>
+                        <table>
+                            <tr>
+                                <td data-i18n="ap_ssid"></td><td><input type="text" name="ap_ssid" required></input></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="ap_pwd"  minlength="8"></td><td><nobr  data-controller_class="PasswordController"><input type="password" id="st_pwd_input" name="ap_pwd" required></input><img src="images/eye.png" id="st_pwd" onClick="onViewPwdClick(this)"></nobr></img></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="ap_fixed_ip"></td><td><input type="checkbox" name="ap_fixed_ip" id="ap_fixed_ip"></input></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="ap_ip"></td><td><input id="ap_ip" type="text" onkeydown="return ipFilter(event)" minlength="7" maxlength="15" name="ap_ip" placeholder="xxx.xxx.xxx.xxx" required pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"></input></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="ap_netmask" required></td><td><input id="ap_netmask" type="text" onkeydown="return ipFilter(event)" minlength="7" maxlength="15"  name="ap_netmask"  placeholder="xxx.xxx.xxx.xxx"  required pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"></input></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="ap_gateway" required></td><td><input  id="ap_gateway" type="text" onkeydown="return ipFilter(event)" minlength="7" maxlength="15"  name="ap_gateway"  placeholder="xxx.xxx.xxx.xxx"  required pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"></input></td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+                <td>
+                    <div class="properties_group"  id="st_group">
+                        <table>
+                            <tr>
+                                <td data-i18n="st_ssid"></td><td><input type="text" name="st_ssid" required></input></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="st_pwd"></td><td><nobr data-controller_class="PasswordController"><input type="password" name="st_pwd" required></input><img src="images/eye.png" onClick="onViewPwdClick(this)"></nobr></img></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="st_fixed_ip"></td><td><input type="checkbox" name="st_fixed_ip" id="st_fixed_ip"></input></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="st_ip"></td><td><input id="st_ip" type="text" onkeydown="return ipFilter(event)" minlength="7" maxlength="15" name="st_ip"  placeholder="xxx.xxx.xxx.xxx"  required pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"></input></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="st_netmask" required></td><td><input id="st_netmask" type="text" onkeydown="return ipFilter(event)" minlength="7" maxlength="15"  name="st_netmask"  placeholder="xxx.xxx.xxx.xxx"  required pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"></input></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="st_gateway" required></td><td><input id="st_gateway" type="text" onkeydown="return ipFilter(event)" minlength="7" maxlength="15"  name="st_gateway"  placeholder="xxx.xxx.xxx.xxx"  required pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"></input></td>
+                            </tr>
+                            <tr>
+                                <td data-i18n="st_is_ap_after"></td><td><input type="checkbox" name="st_is_ap_after" id="st_is_ap_after"></input></td>
+                            </tr>
+                             <tr>
+                                <td data-i18n="st_attempts"></td><td><input type="number" name="st_attempts" id="st_attempts" required></input></td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    	<div class="server_message"><input type="submit" id="button_submit" class="button"></input><span id="submit_response" class="server_message_text"></span></div>
+    </form>
+</div>

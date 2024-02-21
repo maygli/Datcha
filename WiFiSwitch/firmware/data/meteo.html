@@ -1,0 +1,42 @@
+<style>
+    .base {
+      zoom: 1;
+    }
+    .high{
+        background-color: #FFB0B0; 
+    }
+    .low{
+        background-color: #B0B0FF; 
+    }
+    .normal{
+        background-color: #B0FFB0; 
+    }
+    .rd_only{
+        background-color: #B0B0B0; 
+    }
+    .meteo{
+        font-size: 30px;
+        border: solid 1px black;
+        padding: 5px;
+        border-radius: 5px;
+        display: inline-block;
+    }
+</style>
+<head>
+    <meta charset="utf-8">
+    <script type="module">
+        import {onInit} from "./scripts/meteo.js";
+        window.addEventListener("load",onInit);
+    </script>
+</head>
+<body>
+    <div class="meteo normal" id="temp_wid">
+        <span id="wid_value" wid_val="25.3" unit_indx="0">25.3</span>&nbsp;<span id="wid_unit" unit_indx="0"> &deg;C</span>
+    </div>
+    <div class="meteo rd_only" id="pressure_wid">
+        <span id="wid_value" wid_val="760" unit_indx="0">760</span>&nbsp;<span id="wid_unit" unit_indx="0">mm Hg</span>
+    </div>
+    <div class="meteo rd_only" id="humidity_wid">
+        <span id="wid_value" wid_val="20" unit_indx="0">20</span>&nbsp;<span id="wid_unit" unit_indx="0">%</span>
+    </div>
+</body>

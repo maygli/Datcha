@@ -20,61 +20,41 @@
  * IN THE SOFTWARE.
  */
 
+#include <stdlib.h>
+
 #include <sys/param.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_system.h"
-#include "esp_log.h"
-#include "nvs.h"
-#include "nvs_flash.h"
-#include "esp_vfs.h"
-#include "esp_vfs_fat.h"
-#include "esp_event.h"
-#include "esp_netif.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/timers.h>
+#include <esp_system.h>
+#include <esp_log.h>
+#include <nvs.h>
+#include <nvs_flash.h>
+#include <esp_vfs.h>
+#include <esp_vfs_fat.h>
+#include <esp_event.h>
+#include <esp_netif.h>
 
-#include "switch_board.h"
-#include "switch_command.h"
+#include <switch_board.h>
+#include <meteo_board.h>
+#include <switch_command.h>
+
 #include "wifi.h"
 #include "http_server/http_server.h"
 #include "common_def.h"
 #include "updater.h"
-
 #include "switch_command.h"
+#include "restart.h"
+#include "control.h"
+#include "http_client.h"
 
 static const char *TAG="APP";
 
-void test_fat()
-{
-    ESP_LOGI(TAG, "Opening file");
-    FILE* f = fopen("/int/hello.txt", "w");
-    if (f == NULL) {
-        ESP_LOGE(TAG, "Failed to open file for writing");
-        return;
-    }
-    fprintf(f, "Hello World!\n");
-    fclose(f);
-    ESP_LOGI(TAG, "File written");
+static Device       s_Device;
+static HTTPServer   s_Server;
 
-
-    // Open renamed file for reading
-    ESP_LOGI(TAG, "Reading file");
-    f = fopen("/int/hello.txt", "r");
-    if (f == NULL) {
-        ESP_LOGE(TAG, "Failed to open file for reading");
-        return;
-    }
-    char line[64];
-    fgets(line, sizeof(line), f);
-    fclose(f);
-    // strip newline
-    char* pos = strchr(line, '\n');
-    if (pos) {
-        *pos = '\0';
-    }
-    ESP_LOGI(TAG, "Read from file: '%s'", line);
-
-}
+#define CONTROL_UPDATE_PERIOD 5000
 
 void initInternalFlash()
 {
@@ -93,10 +73,7 @@ void initInternalFlash()
         return;
     }
     ESP_LOGI(TAG, "Mount complete");
-//    test_fat();
 }
-
-HTTPServer aServer;
 
 void app_main()
 {
@@ -104,18 +81,13 @@ void app_main()
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    aServer.m_SwitchQueue = xQueueCreate(10, sizeof(SwitchCommand));
-
-    xTaskCreate(switchBoardTask, "switch_task", 4096, aServer.m_SwitchQueue, 10, NULL);
-
-    SwitchCommand aCmd;
-    aCmd.m_Command = CC_SWITCH_ON;
-    aCmd.m_Parameter = 0; 
-
-    xQueueSend(aServer.m_SwitchQueue, &aCmd, NULL);
-
+    s_Server.m_BoardConfig = &s_Device.m_Config;
+    xTaskCreate(SWB_switchBoardTask, "switch_task", 3000, (void*)(&s_Device.m_Queue), 1, NULL);
     initInternalFlash();
     UPD_Process();
+    ESP_ERROR_CHECK(CFG_Init(&s_Device.m_Config));
 
-    ESP_ERROR_CHECK(WiFi_Connect(&aServer));
+    ESP_ERROR_CHECK(CTRL_ControlTaskInit(&s_Device));
+    xTaskCreate(CTRL_ControlTask, "control_task", 2048, (void*)(&s_Device),1, NULL);
+    ESP_ERROR_CHECK(WiFi_Connect(&s_Server, &s_Device.m_Config));
 }

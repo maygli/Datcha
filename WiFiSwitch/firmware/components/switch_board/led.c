@@ -30,67 +30,58 @@
 #define PWM_PERIOD 1000
 #define TRANSITION_MAX_COUNT 5
 
+#define TAG "LED"
+
 void initLED(LED* theLED, uint32_t theChannel)
 {
-    theLED->m_Brightness = 100;
+    theLED->m_Brightness = 0;
+    theLED->m_PrevBrightness = 0;
     theLED->m_State = LS_OFF;
     theLED->m_Channel = theChannel;
     theLED->m_Transition = LT_NONE;
     theLED->m_TransCnt = 0;
 }
 
-void offLED(LED* theLED)
+void setBrightness(LED* theLED, uint8_t theBrightness)
 {
-    if( theLED->m_State == LS_OFF ){
+    if( theLED->m_Brightness == theBrightness ){
         return;
     }
-    theLED->m_State = LS_OFF;
-    theLED->m_Transition = LT_OFF;
+    theLED->m_PrevBrightness = theLED->m_Brightness; 
+    theLED->m_Brightness = theBrightness;
+    theLED->m_Transition = LT_TRANS;
     theLED->m_TransCnt = 0;
+    adjustLED(theLED, true);
 }
 
-void onLED(LED* theLED)
+void adjustLED(LED* theLED, bool isRestart)
 {
-    if( theLED->m_State == LS_ON ){
-        return;
+    if( theLED->m_Transition == LT_NONE ){
+        uint32_t aDuty = 1;
+        aDuty = (theLED->m_Brightness * PWM_PERIOD)/100;
+        pwm_set_duty(theLED->m_Channel,aDuty);
+        if( isRestart ){
+            pwm_start();
+        }
     }
-    theLED->m_State = LS_ON;
-    theLED->m_Transition = LT_ON;
-    theLED->m_TransCnt = 0;
 }
 
 void updateLED(LED* theLED)
 {
     uint32_t aDuty = 0;
-    if( theLED->m_Transition == LT_ON ){
-        aDuty = theLED->m_Brightness;
-        aDuty = (theLED->m_Brightness * theLED->m_TransCnt)/TRANSITION_MAX_COUNT;
-        aDuty = (aDuty * PWM_PERIOD)/100;
-        if( aDuty >= PWM_PERIOD ){
-            aDuty = PWM_PERIOD - 1;
-        }
-        theLED->m_TransCnt++;
-        if( theLED->m_TransCnt > TRANSITION_MAX_COUNT ){
-            theLED->m_Transition = LT_NONE;
-        }
+    if( theLED->m_Transition == LT_NONE )
+        return;
+    aDuty = theLED->m_PrevBrightness + (theLED->m_Brightness - theLED->m_PrevBrightness)*theLED->m_TransCnt/TRANSITION_MAX_COUNT;
+    aDuty = (aDuty * PWM_PERIOD)/100;
+    if( aDuty >= PWM_PERIOD ){
+        aDuty = PWM_PERIOD - 1;
     }
-    if( theLED->m_Transition == LT_OFF){
-        aDuty = theLED->m_Brightness - (theLED->m_Brightness * theLED->m_TransCnt)/TRANSITION_MAX_COUNT;
-//        ESP_LOGI("LED","duty=%d, channel=%d",aDuty,theLED->m_Channel);
-        aDuty = (aDuty * PWM_PERIOD)/100;
-        if( aDuty < 1 ){
-            aDuty = 1;
-        }
-        theLED->m_TransCnt++;
-        if( theLED->m_TransCnt > TRANSITION_MAX_COUNT ){
-            theLED->m_Transition = LT_NONE;
-        }
+    theLED->m_TransCnt++;
+    if( theLED->m_TransCnt > TRANSITION_MAX_COUNT ){
+        theLED->m_Transition = LT_NONE;
     }
-    if( aDuty != 0 ){
-        if( aDuty == 1 )
-          aDuty = 0;
-        pwm_set_duty(theLED->m_Channel,aDuty);
-//        pwm_set_phase(theLED->m_Channel,0);
-//        pwm_start();
-    }
+    ESP_LOGI(TAG, "SET duty=%d", aDuty);
+    if( aDuty == 1 )
+        aDuty = 0;
+    pwm_set_duty(theLED->m_Channel,aDuty);
 }
