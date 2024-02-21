@@ -35,9 +35,11 @@
 #include "config.h"
 #include "config_wifi.h"
 #include "config_switch.h"
+#include "config_restart.h"
 
 #define WIFI_SECTION_NAME "wifi"
 #define SWITCH_SECTION_NAME "switch"
+#define MQTT_SECTION_NAME "mqtt"
 #define MAX_BUFFER_SIZE 768
 #define MAX_CONFIG_FILE_BUFFER_SIZE 512
 
@@ -63,7 +65,9 @@ cJSON* cfg_getJSON(char* theFileName)
 esp_err_t cfg_loadFromFile(BoardConfig* theConfig, char* theFileName)
 {
     esp_err_t aRes = ESP_OK;
-    cJSON* aCfgJson = cfg_getJSON(theFileName);
+    ESP_LOGI(TAG, "Read config file");
+//Should be the first call in this function. Should call anyway not depend on result of reading cfg file    
+     cJSON* aCfgJson = cfg_getJSON(theFileName);
     if( !aCfgJson ){
         ESP_LOGE(TAG, "Can't parse config file");
         return ESP_FAIL;
@@ -84,10 +88,19 @@ esp_err_t cfg_loadFromFile(BoardConfig* theConfig, char* theFileName)
                 return aRes;
             }
         }
+#ifdef MQTT_ENABLED        
+        if( strcmp(aDataItem->string, MQTT_SECTION_NAME) == 0 ){
+            aRes = CFG_MqttParseSettings(&theConfig->m_MqttConfig, aDataItem, false);
+            if( aRes != ESP_OK ){
+                cJSON_Delete(aCfgJson); 
+                return aRes;
+            }
+        }
+#endif        
         aDataItem = aDataItem->next;
     }
     ESP_LOGI(TAG, "Config loaded!");
-    cJSON_Delete(aCfgJson); 
+    cJSON_Delete(aCfgJson);
     return ESP_OK;
 }
 
@@ -96,10 +109,16 @@ esp_err_t CFG_Init(BoardConfig* theConfig)
     esp_err_t aRes;
     CFG_SwitchInit(&theConfig->m_SwitchConfig);
     CFG_WiFiInit(&theConfig->m_WiFiConfig);
+#ifdef MQTT_ENABLED
+    CFG_MqttInit(&theConfig->m_MqttConfig);
+#endif    
+    CFG_RestartInit(&theConfig->m_RestartMode);
 
+    CFG_RestartReadFromFile(&theConfig->m_RestartMode);
     struct stat aStat;
     aRes = stat(CONFIG_FILE_PATH,&aStat);
     if( aRes == ESP_OK ){
+        ESP_LOGI(TAG, "Config file found");
         if( aStat.st_size >= MAX_CONFIG_FILE_BUFFER_SIZE ){
             ESP_LOGE(TAG, "Can't read config file. File too big");
             return ESP_FAIL;
@@ -123,6 +142,7 @@ esp_err_t CFG_Init(BoardConfig* theConfig)
             return aRes;
         }
     }
+
     return ESP_OK;
 }
 
@@ -155,6 +175,18 @@ esp_err_t CFG_ParseSwitchSettings(BoardConfig* theConfig, cJSON* theJSON, bool i
     }
     return CFG_SaveToFile(theConfig, CONFIG_FILE_PATH);
 }
+
+#ifdef MQTT_ENABLED 
+esp_err_t CFG_ParseMqttSettings(BoardConfig* theConfig, cJSON* theJSON, bool isFullSet)
+{
+    esp_err_t aRes;
+    aRes = CFG_MqttParseSettings(&theConfig->m_MqttConfig, theJSON, isFullSet);
+    if( aRes != ESP_OK ){
+        return aRes;
+    }
+    return CFG_SaveToFile(theConfig, CONFIG_FILE_PATH);
+}
+#endif
 
 esp_err_t CFG_SaveToFile(BoardConfig* theConfig, const char* theFileName)
 {

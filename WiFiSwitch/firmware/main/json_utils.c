@@ -26,6 +26,7 @@
 
 #include "json_utils.h"
 #include "common_def.h"
+#include "stdlib.h"
 
 static const char TAG[] = "json_utils";
 
@@ -70,6 +71,23 @@ esp_err_t JSU_ConverInt(cJSON* theJSON, int* theRes)
         }
     }
     ESP_LOGE(TAG, "Invalid format for JSON item %s. Expected integer value.", theJSON->string);
+    return ESP_FAIL;
+}
+
+esp_err_t JSU_ConverDouble(cJSON* theJSON, double* theRes)
+{
+    if( cJSON_IsNumber(theJSON) ){
+        *theRes = theJSON->valuedouble;
+        return ESP_OK;
+    }
+    else if(cJSON_IsString(theJSON)) {
+        char* aVal = cJSON_GetStringValue(theJSON);
+        if( aVal != NULL ){
+            *theRes = atof(aVal);
+            return ESP_OK;
+        }
+    }
+    ESP_LOGE(TAG, "Invalid format for JSON item %s. Expected double value.", theJSON->string);
     return ESP_FAIL;
 }
 

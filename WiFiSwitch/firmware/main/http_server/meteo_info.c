@@ -50,8 +50,13 @@ static const char MeteoInfoTemplate[] = "{"\
 esp_err_t HTTP_GetMeteoInfo(httpd_req_t *req)
 {
     esp_err_t aRetVal;
-    char aBuffer[MAX_METEO_INFO_SZIE];
+    char* aBuffer = malloc(MAX_METEO_INFO_SZIE);
+    if( aBuffer == NULL ){
+        ESP_LOGE(TAG, "CAN'T ALLOCATE MEMORY FOR METEO INFO");
+        return ESP_ERR_NO_MEM;
+    }
     MeteoData aData;
+    Meteo_Read();
     Meteo_GetData(&aData);
     int aTemperature = (int)(aData.m_Temperature*100.+0.5);
     int aPressure = (int)(aData.m_Pressure/10.+0.5);
@@ -76,6 +81,6 @@ esp_err_t HTTP_GetMeteoInfo(httpd_req_t *req)
     HTTPServer* aServer = (HTTPServer*)req->user_ctx;
     httpd_resp_send_chunk(req, aBuffer, strlen(aBuffer));    
     httpd_resp_send_chunk(req, NULL, 0);    
-
+    free(aBuffer);
     return ESP_OK;
 }

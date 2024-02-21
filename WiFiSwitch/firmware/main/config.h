@@ -33,10 +33,17 @@ extern "C" {
 #include "common_def.h"
 #include "config_switch.h"
 #include "config_wifi.h"
+#include "config_mqtt.h"
+#include "config_restart.h"
+#include "restart.h"
 
 typedef struct _BoardConfig{
   WiFiConfig      m_WiFiConfig;
   SwitchConfig    m_SwitchConfig;
+#ifdef MQTT_ENABLED  
+  MqttConfig      m_MqttConfig;
+#endif  
+  RestartConfig   m_RestartMode;
 } BoardConfig;
 
 esp_err_t CFG_Init(BoardConfig* theConfig);
@@ -44,6 +51,9 @@ StConnectionInfo* CFG_GetSTConnection(BoardConfig* theConfig);
 ConnectionInfo* CFG_GetAPConnection(BoardConfig* theConfig);
 esp_err_t CFG_ParseWiFiSettings(BoardConfig* theConfig, cJSON* theJSON, bool isFullSet);
 esp_err_t CFG_ParseSwitchSettings(BoardConfig* theConfig, cJSON* theJSON, bool isFullSet);
+#ifdef MQTT_ENABLED
+esp_err_t CFG_ParseMqttSettings(BoardConfig* theConfig, cJSON* theJSON, bool isFullSet);
+#endif
 esp_err_t CFG_SaveToFile(BoardConfig* theConfig, const char* theFileName);
 
 #ifdef __cplusplus

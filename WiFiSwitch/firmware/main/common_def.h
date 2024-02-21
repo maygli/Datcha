@@ -38,8 +38,11 @@
 #define INT_FLASH_BASE_PATH 	"/int"
 #define HTML_DIR  		        INT_FLASH_BASE_PATH"/html"
 #define UPLOAD_DIR              INT_FLASH_BASE_PATH"/upload"
+//#define UPLOAD_DIR              INT_FLASH_BASE_PATH
 #define COMPLETE_FILE_NAME      "complete"
 #define COMPLETE_FILE_PATH      UPLOAD_DIR"/"COMPLETE_FILE_NAME
+#define RESET_FILE_NAME         "reset"
+#define RESTART_CFG_FILE_PATH   INT_FLASH_BASE_PATH"/"RESET_FILE_NAME
 #define TAR_EXT                 ".tar"
 #define CONFIG_FILE_NAME	    "board_config.json"
 #define CONFIG_FILE_PATH        INT_FLASH_BASE_PATH"/"CONFIG_FILE_NAME
@@ -58,7 +61,7 @@
 #define AP_MAX_STA_CONN         4
 
 #define DEFAULT_ST_SSID         "MaygliHome"
-#define DEFAULT_ST_PASSWORD     "11111111"
+#define DEFAULT_ST_PASSWORD     "firebird"
 #define ST_IP_0                 192
 #define ST_IP_1                 168
 #define ST_IP_2                 0
@@ -93,6 +96,17 @@
 #define DEFAULT_OFF_BRIGNESS     95
 #define DEFAULT_SWITCH_SOUND     true
 #define DEFAULT_SWITCH_STYLE     0
+#define DEFAULT_SWITCH_LIMIT     12
+#define LIMIT_PRECISION          100
 
 #define ON_VALUE    "on"
 #define OFF_VALUE   "off"
+
+#define MAX_STR_SIZE            256
+
+#define DEFAULT_ENABLE_MQTT         true
+#define DEFAULT_MQTT_SERVER         "mqtt://mqtt.by"
+#define DEFAULT_MQTT_USER           "Maygli"
+#define DEFAULT_MQTT_PASSWORD       "uvrgt8xy"
+#define DEFAULT_MQTT_DEVICE_PATH    "/user/Maygli/Datcha/Heater1/"
+#define DEFAULT_MQTT_CONTROL_TOPIC  "/user/Maygli/Datcha/Switch1/temperature"

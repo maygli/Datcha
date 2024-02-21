@@ -22,25 +22,31 @@
 
 #pragma once
 
-typedef struct _MeteoData{
-    float   m_Temperature;
-    int     m_TemperatureIndex;
-    bool    m_IsTemperature;
-    float   m_Pressure;
-    int     m_PressureIndex;
-    bool    m_IsPressure;
-    float   m_Humidity;
-    int     m_HumidityIndex;
-    bool    m_IsHumidity;
-} MeteoData;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void Meteo_Init();
-void Meteo_Read();
-void Meteo_GetData(MeteoData* theData);
+#include <stdint.h>
+#include <stdbool.h>
+
+#include <esp_err.h>
+
+#include <cJSON.h>
+
+#include "common_def.h"
+
+#define RESTART_AP_FLAG         1
+#define RESTART_HTTP_FLAG       2 
+
+typedef struct _RestartConfig{
+    bool    m_isTmpCfg;
+    bool    m_isAP;
+    bool    m_isHttp;
+} RestartConfig;
+
+void CFG_RestartInit(RestartConfig* theConfig);
+void CFG_RestartSaveToFile(RestartConfig* theConfig, uint8_t theFlag);
+void CFG_RestartReadFromFile(RestartConfig* theConfig);
 
 #ifdef __cplusplus
 }

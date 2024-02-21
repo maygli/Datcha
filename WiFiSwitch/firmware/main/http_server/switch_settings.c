@@ -58,12 +58,17 @@ esp_err_t HTTP_SetSwitchSettings(httpd_req_t *req)
 
 esp_err_t HTTP_GetSwitchSettings(httpd_req_t *req)
 {
-    char aRes[MAX_SWITCH_JSON_SIZE];
+    char* aRes = malloc(MAX_SWITCH_JSON_SIZE);
+    if( aRes == NULL ){
+        ESP_LOGE(TAG, "Can't allocate memeory for switch settings");
+        return ESP_ERR_NO_MEM;
+    }
     HTTPServer* aServer = (HTTPServer*)req->user_ctx;
     BoardConfig* aConfig = aServer->m_BoardConfig;
 
     CFG_SwitchGetSettingsString(&aConfig->m_SwitchConfig,aRes);
     httpd_resp_send_chunk(req, aRes, strlen(aRes));    
-    httpd_resp_send_chunk(req, NULL, 0);    
+    httpd_resp_send_chunk(req, NULL, 0);
+    free(aRes);    
     return ESP_OK;
 }

@@ -31,9 +31,10 @@ extern "C" {
 
 esp_err_t JSU_ConverBool(cJSON* theJSON, bool* theRes);
 esp_err_t JSU_ConverInt(cJSON* theJSON, int* theRes);
+esp_err_t JSU_ConverDouble(cJSON* theJSON, double* theRes);
 esp_err_t JSU_ConverString(cJSON* theJSON, char* theBuffer, size_t theStringMaxSize);
 esp_err_t JSU_ConvertIP(cJSON* theJSON, uint8_t* theRes);
 
 #ifdef __cplusplus
-extern }
+}
 #endif

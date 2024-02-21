@@ -20,28 +20,41 @@
  * IN THE SOFTWARE.
  */
 
-#pragma once
+#include "restart.h"
+#include "common_def.h"
+#include "esp_log.h"
 
-typedef struct _MeteoData{
-    float   m_Temperature;
-    int     m_TemperatureIndex;
-    bool    m_IsTemperature;
-    float   m_Pressure;
-    int     m_PressureIndex;
-    bool    m_IsPressure;
-    float   m_Humidity;
-    int     m_HumidityIndex;
-    bool    m_IsHumidity;
-} MeteoData;
+#define RESTART_TAG "RESTART"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void Meteo_Init();
-void Meteo_Read();
-void Meteo_GetData(MeteoData* theData);
-
-#ifdef __cplusplus
+esp_err_t RESTART_Save( RestartFlag theFlag)
+{
+  FILE* aRestartFile = fopen(RESTART_CFG_FILE_PATH,"wb");
+  if( aRestartFile == NULL ){
+    ESP_LOGE(RESTART_TAG,"Can't open 'restart' file");
+    return ESP_FAIL;
+  }
+  int aCnt = fwrite(&theFlag, sizeof(theFlag), 1, aRestartFile);
+  if( aCnt != 1 ){
+    ESP_LOGE(RESTART_TAG,"Can't write to 'restart' file");
+    return ESP_FAIL;
+  }
+  fclose(aRestartFile);
+  return ESP_OK;
 }
-#endif
+
+RestartFlag RESTART_Read()
+{
+  FILE* aRestartFile = fopen(RESTART_CFG_FILE_PATH,"rb");
+  if( aRestartFile == NULL ){
+    ESP_LOGE(RESTART_TAG,"Can't open 'restart' file");
+    return RF_NONE;
+  }
+  RestartFlag aFlag;
+  int aCnt = fread(&aFlag, sizeof(aFlag), 1, aRestartFile);
+  if( aCnt != 1 ){
+    ESP_LOGE(RESTART_TAG,"Can't read restart flag from 'restart' file");
+    return RF_NONE;
+  }
+  fclose(aRestartFile);
+  return RF_NONE;
+}

@@ -1,3 +1,6 @@
 {
-    "idf.adapterTargetName": "esp8266"
+    "idf.adapterTargetName": "esp8266",
+    "files.associations": {
+        "http_client.h": "c"
+    }
 }

@@ -22,26 +22,31 @@
 
 #pragma once
 
-typedef struct _MeteoData{
-    float   m_Temperature;
-    int     m_TemperatureIndex;
-    bool    m_IsTemperature;
-    float   m_Pressure;
-    int     m_PressureIndex;
-    bool    m_IsPressure;
-    float   m_Humidity;
-    int     m_HumidityIndex;
-    bool    m_IsHumidity;
-} MeteoData;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void Meteo_Init();
-void Meteo_Read();
-void Meteo_GetData(MeteoData* theData);
+#include <stdbool.h>
+
+#include "common_def.h"
+#include <esp_err.h>
+#include <cJSON.h>
+
+#ifdef MQTT_ENABLED
+typedef struct _MqttConfig{
+  bool      m_IsEnabled;
+  char      m_Server[MAX_STR_SIZE];
+  char      m_User[MAX_STR_SIZE];
+  char      m_Password[MAX_PASSWORD_SIZE];
+  char      m_DevicePath[MAX_STR_SIZE-16];
+  char      m_ControlTopic[MAX_STR_SIZE];
+} MqttConfig;
+
+void CFG_MqttInit(MqttConfig* theConfig);
+esp_err_t CFG_MqttParseSettings(MqttConfig* theConfig, cJSON* theJSON, bool isFullSet);
+esp_err_t CFG_MqttGetSettingsString(MqttConfig* theConfig, char* theBuffer);
 
 #ifdef __cplusplus
 }
+#endif
 #endif

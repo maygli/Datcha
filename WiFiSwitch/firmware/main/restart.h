@@ -22,11 +22,16 @@
 
 #pragma once
 
+#include <esp_err.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void udp_ServerTask(void *pvParameters);
+typedef enum _RestartFlag{RF_NONE=0, RF_AP_HTTP=1, RF_ST_HTTP=2, RF_AP_MQTT=3, RF_ST_MQTT=4} RestartFlag;
+
+esp_err_t RESTART_Save( RestartFlag theFlag);
+RestartFlag RESTART_Read();
 
 #ifdef __cplusplus
 }

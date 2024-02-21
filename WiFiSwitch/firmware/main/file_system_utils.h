@@ -39,6 +39,6 @@ esp_err_t FSU_CheckOrCreateDir( const char* theDirName );
 char* FSU_GetFileNameByPath(char* thePath);
 
 #ifdef __cplusplus
-extern }
+}
 #endif
 

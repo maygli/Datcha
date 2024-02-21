@@ -50,6 +50,16 @@ function getWiFiSettings(){
   return JSON.stringify(aWiFiSettings)
 }
 
+function getMqttSettings(){
+  var aMqttSettings = {
+    "is_mqtt" : "on",
+    "mqtt_server" : "mqtt_server",
+    "mqtt_user" : "mqtt_user",
+    "mqtt_password" : "mqtt_password"
+  };
+  return JSON.stringify(aMqttSettings)
+}
+
 function getMeteoState(){
   var aMeteo = {
     "is_temp" : true, 
@@ -110,6 +120,16 @@ app.post("/wifi_settings", function(request, response){
      response.send("Ok");
 });
 
+app.get("/mqtt_settings", function(request, response){
+    response.send(getMqttSettings());
+});
+
+app.post("/mqtt_settings", function(request, response){
+     console.log("Set mqtt parameters");
+     console.log(request.body);
+     response.send("Ok");
+});
+
 app.get("/board_info", function(request, response){
     response.send(getBoardConfig());
 });
@@ -118,4 +138,4 @@ app.get("/meteo_state", function(request, response){
     response.send(getMeteoState());
 });
 
-app.listen(3000);
+app.listen(3001);

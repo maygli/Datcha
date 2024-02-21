@@ -22,25 +22,24 @@
 
 #pragma once
 
-typedef struct _MeteoData{
-    float   m_Temperature;
-    int     m_TemperatureIndex;
-    bool    m_IsTemperature;
-    float   m_Pressure;
-    int     m_PressureIndex;
-    bool    m_IsPressure;
-    float   m_Humidity;
-    int     m_HumidityIndex;
-    bool    m_IsHumidity;
-} MeteoData;
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+
+#include "config.h"
+#include <esp_err.h>
+#include <esp_log.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void Meteo_Init();
-void Meteo_Read();
-void Meteo_GetData(MeteoData* theData);
+typedef struct _Device{
+  BoardConfig     m_Config;
+  xQueueHandle    m_Queue;
+} Device;
+
+esp_err_t CTRL_ControlTaskInit(Device* theDevice);
+void CTRL_ControlTask(void *arg);
 
 #ifdef __cplusplus
 }

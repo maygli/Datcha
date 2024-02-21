@@ -108,6 +108,7 @@ void CFG_WiFiInit(WiFiConfig* theConfig)
     theConfig->m_APConn.m_Gateway[1] = AP_GATE_1;
     theConfig->m_APConn.m_Gateway[2] = AP_GATE_2;
     theConfig->m_APConn.m_Gateway[3] = AP_GATE_3;
+
 }
 
 esp_err_t CFG_WiFiParseSettings(WiFiConfig* theConfig, cJSON* theJSON, bool isFullSet)

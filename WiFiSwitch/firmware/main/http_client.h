@@ -22,26 +22,10 @@
 
 #pragma once
 
-typedef struct _MeteoData{
-    float   m_Temperature;
-    int     m_TemperatureIndex;
-    bool    m_IsTemperature;
-    float   m_Pressure;
-    int     m_PressureIndex;
-    bool    m_IsPressure;
-    float   m_Humidity;
-    int     m_HumidityIndex;
-    bool    m_IsHumidity;
-} MeteoData;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-void Meteo_Init();
-void Meteo_Read();
-void Meteo_GetData(MeteoData* theData);
-
+    void CHTTP_SendNotify(char* aHost, int aPort, char* aPath, char* aPosData);
 #ifdef __cplusplus
 }
 #endif

@@ -35,12 +35,14 @@
 #include "http_server.h"
 #include "board_info.h"
 #include "meteo_info.h"
+#include "mqtt_settings.h"
 
 //Requests
 #define SWITCH_STATE    "/switch_state"
 #define SWITCH_CONTROL  "/switch_control"
 #define SWITCH_SETTINGS "/switch_settings"
 #define WIFI_SETTINGS   "/wifi_settings"
+#define MQTT_SETTINGS   "/mqtt_settings"
 #define BOARD_INFO      "/board_info"
 #define METEO_STATE     "/meteo_state"
 
@@ -64,7 +66,8 @@ esp_err_t HTTP_ServerStart(HTTPServer* theServer)
      * allow the same handler to respond to multiple different
      * target URIs which match the wildcard scheme */
     config.uri_match_fn = httpd_uri_match_wildcard;
-    config.max_uri_handlers = 16;
+    config.max_uri_handlers = 14;
+    config.stack_size = 3000;
     
     ESP_LOGI(SERVER_TAG, "Starting HTTP Server");
     esp_err_t aRes = httpd_start(&theServer->m_HttpServer, &config);
@@ -121,6 +124,16 @@ esp_err_t HTTP_ServerStart(HTTPServer* theServer)
     };
     httpd_register_uri_handler(theServer->m_HttpServer, &aWiFiSettingsGet);
 
+#ifdef MQTT_ENABLED
+    httpd_uri_t aMqttSettingsGet = {
+        .uri       = MQTT_SETTINGS,  // Match all URIs of type /path/to/file
+        .method    = HTTP_GET,
+        .handler   = HTTP_GetMqttSettings,
+        .user_ctx  = theServer    // Pass server data as context
+    };
+    httpd_register_uri_handler(theServer->m_HttpServer, &aMqttSettingsGet);
+#endif
+
     /* get html */
     httpd_uri_t aGetHtml = {
         .uri       = "*",  // Match all URIs of type /path/to/file
@@ -153,6 +166,16 @@ esp_err_t HTTP_ServerStart(HTTPServer* theServer)
         .user_ctx  = theServer    // Pass server data as context
     };
     httpd_register_uri_handler(theServer->m_HttpServer, &aWiFiSettingsSet);
+
+#ifdef MQTT_ENABLED
+    httpd_uri_t aMqttSettingsSet = {
+        .uri       = MQTT_SETTINGS,  // Match all URIs of type /path/to/file
+        .method    = HTTP_POST,
+        .handler   = HTTP_SetMqttSettings,
+        .user_ctx  = theServer    // Pass server data as context
+    };
+    httpd_register_uri_handler(theServer->m_HttpServer, &aMqttSettingsSet);
+#endif
 
     httpd_uri_t aFileUpload = {
         .uri       = "*",  // Match all URIs of type /path/to/file

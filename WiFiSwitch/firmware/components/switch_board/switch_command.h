@@ -22,15 +22,27 @@
 
 #pragma once
 
+#include "board_config.h"
+
 typedef enum _CommandCode{
   CC_SWITCH_OFF=0, CC_SWITCH_ON=1, CC_SWITCH_REV=2, 
-  CC_OFF_LED_BR=3, CC_ON_LED_BR=4, CC_STYLE=5,
-  CC_SOUND_ON=6, CC_RESET=7	
+  CC_SET_LED_BR=3, CC_STYLE=4, CC_SOUND_ON=5, CC_RESET=6, 
+  CC_RESET_REQ=7, CC_TEMPERATURE=8, CC_IN_NEG_EDGE=9, 
+  CC_SET_STATE=10, CC_SET_LIMIT=11, CC_SET_VALUE=12
 } CommandCode;
+
+typedef struct _LEDsBrightness{
+  uint8_t m_State;
+  uint8_t m_Brightness[LED_COUNT];
+} LEDsBrightness;
 
 typedef struct _SwitchCommand{
     uint8_t  m_Command;
-    uint8_t  m_Parameter;
+    union{
+      uint8_t         m_IntParam;
+      double          m_DoubleParam;
+      LEDsBrightness  m_Brightness;
+    };
 } SwitchCommand;
 
 

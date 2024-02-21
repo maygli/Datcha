@@ -1,0 +1,26 @@
+<div>
+    <form action="mqtt_settings" method="POST">
+        <input type="checkbox" id="is_mqtt" name="is_mqtt" value="on"/>
+        <label for="is_mqtt" data-i18n="mqtt_enable">Enable mqtt</label>
+        <p>
+        <table  class="properties_group" id="mqtt_group">
+            <tr>
+                <td data-i18n="mqtt_server"></td><td><input type="text" name="mqtt_server" required></input></td>
+            </tr>
+            <tr>
+                <td data-i18n="mqtt_user"></td><td><input type="text" name="mqtt_user" required></input></td>
+            </tr>
+            <tr>
+                <td data-i18n="mqtt_password"></td><td><nobr  data-controller_class="PasswordController"><input type="password" id="mqtt_pwd_input" name="mqtt_password" required></input><img src="images/eye.png" id="mqtt_pwd" onClick="onViewPwdClick(this)"></nobr></img></td>
+            </tr>
+            <tr>
+                <td data-i18n="mqtt_device_path"></td><td><input type="text" name="mqtt_device_path" required></input></td>
+            </tr>
+            <tr>
+                <td data-i18n="mqtt_control_topic"></td><td><input type="text" name="mqtt_control_topic" required></input></td>
+            </tr>
+        </table>
+        <p>
+        <div class="server_message"><input type="submit" id="button_submit" class="button"></input><span id="submit_response" class="server_message_text"></span></div>
+    </form>
+</div>

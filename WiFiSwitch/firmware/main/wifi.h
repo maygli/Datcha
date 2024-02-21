@@ -25,6 +25,7 @@
 #include <esp_err.h>
 
 #include "config.h"
+#include "restart.h"
 #include "http_server/http_server.h"
 
 #ifdef __cplusplus

@@ -20,10 +20,13 @@
  * IN THE SOFTWARE.
  */
 
+#include <stdlib.h>
+
 #include <sys/param.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <freertos/timers.h>
 #include <esp_system.h>
 #include <esp_log.h>
 #include <nvs.h>
@@ -42,27 +45,16 @@
 #include "common_def.h"
 #include "updater.h"
 #include "switch_command.h"
-#include "udp.h"
+#include "restart.h"
+#include "control.h"
+#include "http_client.h"
 
 static const char *TAG="APP";
 
-static BoardConfig  s_BoardConfig;
+static Device       s_Device;
 static HTTPServer   s_Server;
 
-void test_fat()
-{
-    ESP_LOGI(TAG, "Opening file config file");
-    FILE* f = fopen(CONFIG_FILE_PATH, "r");
-    if (f == NULL) {
-        ESP_LOGE(TAG, "Failed to open config file");
-        return;
-    }
-    char aBuffer[4096];
-    fgets(aBuffer, 4096, f);
-    ESP_LOGI(TAG, "******* Config file *********");
-    ESP_LOGI(TAG, "%s", aBuffer);
-    fclose(f);
-}
+#define CONTROL_UPDATE_PERIOD 5000
 
 void initInternalFlash()
 {
@@ -81,7 +73,6 @@ void initInternalFlash()
         return;
     }
     ESP_LOGI(TAG, "Mount complete");
-//    test_fat();
 }
 
 void app_main()
@@ -90,16 +81,13 @@ void app_main()
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    s_Server.m_BoardConfig = &s_BoardConfig;
-
-    xTaskCreate(SWB_switchBoardTask, "switch_task", 2048, NULL, 10, NULL);
-    xTaskCreate(Meteo_Task, "temperature", 4096, NULL, 10, NULL);
-
+    s_Server.m_BoardConfig = &s_Device.m_Config;
+    xTaskCreate(SWB_switchBoardTask, "switch_task", 3000, (void*)(&s_Device.m_Queue), 1, NULL);
     initInternalFlash();
- //   test_fat();
     UPD_Process();
-    ESP_ERROR_CHECK(CFG_Init(&s_BoardConfig));
+    ESP_ERROR_CHECK(CFG_Init(&s_Device.m_Config));
 
-    ESP_ERROR_CHECK(WiFi_Connect(&s_Server, &s_BoardConfig));
-//    xTaskCreate(udp_ServerTask, "udp_server", 4096, NULL, 5, NULL);
+    ESP_ERROR_CHECK(CTRL_ControlTaskInit(&s_Device));
+    xTaskCreate(CTRL_ControlTask, "control_task", 2048, (void*)(&s_Device),1, NULL);
+    ESP_ERROR_CHECK(WiFi_Connect(&s_Server, &s_Device.m_Config));
 }

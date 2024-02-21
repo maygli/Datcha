@@ -49,7 +49,11 @@ char* http_getJSONParameterValue(cJSON* theJson, char* theParam)
 
 esp_err_t HTTP_GetSwitchState(httpd_req_t *req)
 {
-  char anOutBuffer[OUT_BUFFER_SIZE];
+  char* anOutBuffer = malloc(OUT_BUFFER_SIZE);
+  if( anOutBuffer == NULL ){
+    ESP_LOGE(TAG,"Can't allocate memory for switch state");
+    return ESP_ERR_NO_MEM;
+  }
   SwitchState aState = SWB_getBoardState();
   if( aState == SS_ON ){
     sprintf(anOutBuffer,"{\"state\":\"%s\"}", ON_NAME);
@@ -58,7 +62,8 @@ esp_err_t HTTP_GetSwitchState(httpd_req_t *req)
     sprintf(anOutBuffer,"{\"state\":\"%s\"}", OFF_NAME);
   }
   httpd_resp_send_chunk(req, anOutBuffer, strlen(anOutBuffer));    
-  httpd_resp_send_chunk(req, NULL, 0);    
+  httpd_resp_send_chunk(req, NULL, 0); 
+  free(anOutBuffer);   
   return ESP_OK;
 }
 

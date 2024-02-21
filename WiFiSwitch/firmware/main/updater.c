@@ -41,7 +41,7 @@
 #include "updater.h"
 #include "ota.h"
 
-#define OTA_COPY_BUFFER_SIZE 4096
+#define OTA_COPY_BUFFER_SIZE 512
 
 static const char UPDATER_TAG[]="updater";
 

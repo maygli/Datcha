@@ -35,7 +35,9 @@
 #include "lwip/sys.h"
 
 #include "config.h"
+#include "mqtt.h"
 #include "http_server/http_server.h"
+#include "http_client.h"
 
 #define CONNECTED_BITS (BIT(0))
 #define FAILED_BITS (BIT(1))
@@ -164,6 +166,7 @@ static bool wifi_start(BoardConfig* theConfig)
 {
 //   esp_err_t aRes;
     bool aRes = true;
+    bool isCfgAP = (theConfig->m_RestartMode.m_isTmpCfg && theConfig->m_RestartMode.m_isAP);
     ESP_LOGI(TAG,"wifi_Start");
     ConnectionInfo* anAPConn = CFG_GetAPConnection(theConfig);
     StConnectionInfo* aStConn = CFG_GetSTConnection(theConfig);
@@ -171,21 +174,28 @@ static bool wifi_start(BoardConfig* theConfig)
     wifi_mode_t aMode = WIFI_MODE_NULL;
 
     s_ConnAttempts = INFINITE_ATTEMPTS;
-    if(aStConn->m_Connection.m_IsEnabled && anAPConn->m_IsEnabled){
-        ESP_LOGI(TAG, "Set mode to APST");
-        aMode = WIFI_MODE_APSTA;
-        aRes = false;
-    }
-    else if( aStConn->m_Connection.m_IsEnabled ){
-        ESP_LOGI(TAG, "Set mode to ST");
-        aMode = WIFI_MODE_STA;
-        if( aStConn->m_IsConnectAPAfter )
-            s_ConnAttempts = aStConn->m_StAttemptsCount;
-    }
-    else if( anAPConn->m_IsEnabled ){
-        ESP_LOGI(TAG, "Set mode to AP");
+    if( isCfgAP ){
+        ESP_LOGI(TAG, "Set mode to AP after reset");
         aMode = WIFI_MODE_AP;
         aRes = false;
+    }
+    else{
+        if(aStConn->m_Connection.m_IsEnabled && anAPConn->m_IsEnabled){
+            ESP_LOGI(TAG, "Set mode to APST");
+            aMode = WIFI_MODE_APSTA;
+            aRes = false;
+        }
+        else if( aStConn->m_Connection.m_IsEnabled ){
+            ESP_LOGI(TAG, "Set mode to ST");
+            aMode = WIFI_MODE_STA;
+            if( aStConn->m_IsConnectAPAfter )
+                s_ConnAttempts = aStConn->m_StAttemptsCount;
+        }
+        else if( anAPConn->m_IsEnabled ){
+            ESP_LOGI(TAG, "Set mode to AP");
+            aMode = WIFI_MODE_AP;
+            aRes = false;
+        }
     }
     if( aMode == WIFI_MODE_NULL ){
         return false;
@@ -197,15 +207,20 @@ static bool wifi_start(BoardConfig* theConfig)
     tcpip_adapter_init();
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     ESP_ERROR_CHECK(esp_wifi_set_mode(aMode));
-
-    if( aStConn->m_Connection.m_IsEnabled ){
+    if( aStConn->m_Connection.m_IsEnabled && !isCfgAP ){
+        ESP_LOGI(TAG, "================= Configure ST");
         ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &wifi_OnStDisconnect, &s_ConnAttempts));
         ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_OnStGotIp, &s_ConnAttempts));
-
+#ifdef MQTT_ENABLED
+        if( theConfig->m_MqttConfig.m_IsEnabled ){
+            theConfig->m_WiFiConfig.m_StConn.m_Connection.m_IsFixedIP = false;
+        }
+#endif        
         ESP_ERROR_CHECK(wifi_configureStation(&aStConn->m_Connection));
     }
 
-    if( anAPConn->m_IsEnabled ){
+    if( anAPConn->m_IsEnabled || isCfgAP ){
+        ESP_LOGI(TAG, "================= Configure AP");
         ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &wifi_OnAPStaConnected, NULL));
         ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &wifi_OnAPStaDisonnected, NULL));
         ESP_ERROR_CHECK(wifi_configureAP(anAPConn));
@@ -219,9 +234,6 @@ static bool wifi_start(BoardConfig* theConfig)
         ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s",
              anAPConn->m_SSID, anAPConn->m_Password);
     }
-    tcpip_adapter_ip_info_t anIpInfo;
-    ESP_ERROR_CHECK(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &anIpInfo));
-    ESP_LOGI(TAG, "AP Ip:" IPSTR, IP2STR(&anIpInfo.ip));
     return aRes;
 }
 
@@ -242,8 +254,26 @@ esp_err_t WiFi_Connect(HTTPServer* theServer, BoardConfig* theConfig)
             ESP_ERROR_CHECK(esp_wifi_start());
         }
     }
-    if( theServer )
+    tcpip_adapter_ip_info_t anIpInfo;
+    ESP_ERROR_CHECK(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &anIpInfo));
+    ESP_LOGI(TAG, "AP Ip:" IPSTR, IP2STR(&anIpInfo.ip));
+    ESP_ERROR_CHECK(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &anIpInfo));
+    ESP_LOGI(TAG, "ST Ip:" IPSTR, IP2STR(&anIpInfo.ip));
+    bool isRestartHttp = theConfig->m_RestartMode.m_isTmpCfg | theConfig->m_RestartMode.m_isHttp;
+#ifdef MQTT_ENABLED
+    if( theConfig->m_MqttConfig.m_IsEnabled && (isRestartHttp == false)){
+        MQTT_AppStart(theConfig);
+    }
+    else{
+        if( theServer ){
+            HTTP_ServerStart(theServer);
+        }
+    }
+#else
+    if( theServer ){
         HTTP_ServerStart(theServer);
+    }
+#endif    
     return ESP_OK;
 }
 

@@ -65,12 +65,17 @@ void http_InitUploadContext(UploadContext* theContext, HTTPServer* theServer)
 
 int http_OpenFile(char* theFileName, int theNameSize, void* theContext)
 {
-    char aFilePath[MAX_PATH_SIZE];
+    char* aFilePath = malloc(MAX_PATH_SIZE);
+    if( aFilePath == NULL ){
+        ESP_LOGE(TAG,"Can't allocate memory for file path");
+        return ESP_ERR_NO_MEM;
+    }
     int  aPathLen;
     esp_err_t anErr;
     UploadContext* aContext = (UploadContext*)theContext;
 /*If firmware uploaded then start OTA*/
     if( strncmp(theFileName, FIRMWARE_FILE_NAME, theNameSize) == 0 ){
+        free(aFilePath);
         ESP_LOGI(TAG,"Upload firware file");
         aContext->m_isFirmware = true;
         anErr = OTA_Start(&aContext->m_OTAHandle, &aContext->m_OTAPartition);
@@ -88,19 +93,29 @@ int http_OpenFile(char* theFileName, int theNameSize, void* theContext)
     aFilePath[aPathLen+theNameSize] = 0;
     ESP_LOGI(TAG,"Open file %s", aFilePath);
     aContext->m_SavedFile = fopen(aFilePath,"w");
+    free(aFilePath);
     return 0;
 }
 
 int http_GetParameter(char* theName, int theNameSize, char* theData, int theDataSize,  void* theContext)
 {
-    char aNameBuffer[256];
-    char aDataBuffer[256];
+    char* aNameBuffer = malloc(256);
+    if(aNameBuffer == NULL){
+        return ESP_ERR_NO_MEM;
+    }
+    char* aDataBuffer = malloc(256);
+    if( aDataBuffer == NULL ){
+        free(aNameBuffer);
+        return ESP_ERR_NO_MEM;
+    }
     strncpy(aNameBuffer, theName, theNameSize);
     aNameBuffer[theNameSize] = 0;
     strncpy(aDataBuffer, theData, theDataSize);
     aDataBuffer[theNameSize] = 0;
     UploadContext* aContext = (UploadContext*)theContext;
     ESP_LOGI(TAG,"Found parameter %s=%s", aNameBuffer, aDataBuffer);
+    free(aNameBuffer);
+    free(aDataBuffer);
     if( strncmp(theName, CLEAR_PARAMETER_NAME, theNameSize) == 0 ){
         if(strncmp(theData, TRUE_VALUE, theDataSize) == 0 ){
             ESP_LOGI(TAG,"Clear is set");
@@ -218,7 +233,10 @@ esp_err_t HTTP_UploadFile(httpd_req_t *req)
 {
     ESP_LOGI(TAG,"POST content_len=%d uri='%s'", req->content_len, req->uri);
     esp_err_t       aRes;
-    char            aBoundStr[MAX_BOUND_SIZE];
+    char*           aBoundStr = malloc(MAX_BOUND_SIZE);
+    if( aBoundStr == NULL ){
+        return ESP_ERR_NO_MEM;
+    }
     int             aBoundSize;
     FileUploader    aFileUploader;
     UploadContext   anUploadContext;
@@ -239,6 +257,7 @@ esp_err_t HTTP_UploadFile(httpd_req_t *req)
     if( anUploadContext.m_SavedFile != NULL ){
         fclose(anUploadContext.m_SavedFile);
     }
+    free(aBoundStr);
     if( aRes != ESP_OK ){
         return aRes;
     }

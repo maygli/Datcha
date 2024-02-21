@@ -23,6 +23,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -33,6 +34,10 @@ typedef struct _GPIOIn{
     uint32_t        m_Pin;
     xQueueHandle    m_Queue;
     bool            m_isReal;
+    bool            m_isEnable;
+    struct timeval  m_TimeBtnStart;
+    int             m_CurrLvl;
+    bool            m_isResetSent;
 } GPIOIn;
 
 #ifdef __cplusplus
@@ -40,6 +45,8 @@ extern "C" {
 #endif
 
 void initGPIOIn(GPIOIn* theGPIO, uint32_t thePin, xQueueHandle theQueue);
+int getGPIOState(GPIOIn* theGPIO);
+void updateGPIOIn(GPIOIn* theGPIO);
 
 #ifdef __cplusplus
 }

@@ -35,15 +35,19 @@
 #define OFF_BRIGHTNESS_KEYWORD "off_brightness"
 #define SOUND_KEYWORD "sound"
 #define STYLE_KEYWORD "style"
+#define LIMIT_KEYWORD "limit"
 
-//static const char TAG[]="config_switch";
+static const char TAG[]="config_switch";
 
 static const char SwitchSettingTemplate[] = "{"\
     "\"on_brightness\": %d,"\
     "\"off_brightness\": %d,"\
     "\"sound\": \"%s\","\
-    "\"style\": %d"\
+    "\"style\": %d,"\
+    "\"limit\": %d.%d"\
   "}";
+
+void cfg_setBoardParameters(SwitchConfig* theConfig);
 
 void CFG_SwitchInit(SwitchConfig* theConfig)
 {
@@ -51,6 +55,8 @@ void CFG_SwitchInit(SwitchConfig* theConfig)
     theConfig->m_OnBrightness = DEFAULT_OFF_BRIGNESS;
     theConfig->m_IsSoundOn = DEFAULT_SWITCH_SOUND;
     theConfig->m_Style = DEFAULT_SWITCH_STYLE;
+    theConfig->m_Limit = DEFAULT_SWITCH_LIMIT;
+    cfg_setBoardParameters(theConfig);
 }
 
 esp_err_t CFG_SwitchGetSettingsString(SwitchConfig* theConfig, char* theBuffer)
@@ -63,16 +69,19 @@ esp_err_t CFG_SwitchGetSettingsString(SwitchConfig* theConfig, char* theBuffer)
                         theConfig->m_OnBrightness,
                         theConfig->m_OffBrightness,
                         aSoundOnStr,
-                        theConfig->m_Style);
+                        theConfig->m_Style,
+                        (int)theConfig->m_Limit,
+                        ((int)(theConfig->m_Limit*LIMIT_PRECISION))%LIMIT_PRECISION);
     return ESP_OK;
 }
 
 void cfg_setBoardParameters(SwitchConfig* theConfig)
 {
-    SWB_setOnBrightness(theConfig->m_OnBrightness);
-    SWB_setOffBrightness(theConfig->m_OffBrightness);
+//    SWB_setBrightness(theConfig->m_OnBrightness);
+//    SWB_setBrightness(theConfig->m_OffBrightness);
     SWB_soundOn(theConfig->m_IsSoundOn);
-    SWB_setStyle(theConfig->m_Style);
+    SWB_SetLimit(theConfig->m_Limit);
+    ESP_LOGI(TAG, "Set limit");
 }
 
 esp_err_t CFG_SwitchParseSettings(SwitchConfig* theConfig, cJSON* theJSON, bool isFullSet)
@@ -116,6 +125,13 @@ esp_err_t CFG_SwitchParseSettings(SwitchConfig* theConfig, cJSON* theJSON, bool 
             aRes = JSU_ConverInt(aDataItem, &aVal);
             if( aRes == ESP_OK ){
                 aConfig.m_Style = (uint8_t)aVal;
+            }
+        }
+        else if(strcmp( aDataItem->string, LIMIT_KEYWORD) == 0 ){
+            double aVal;
+            aRes = JSU_ConverDouble(aDataItem, &aVal);
+            if( aRes == ESP_OK ){
+                aConfig.m_Limit = aVal;
             }
         }
         aDataItem = aDataItem->next;

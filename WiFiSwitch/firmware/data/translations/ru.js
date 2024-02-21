@@ -53,6 +53,11 @@ const translations = {
             "st_attempts" : "Connection attempts",
             "submit_suceess" : "Sucess",
             "submit_fail" : "Fail",
+
+            "mqtt_enable" : "Use Mqtt",
+            "mqtt_server" : "Mqtt server",
+            "mqtt_user" : "User",
+            "mqtt_password" : "Password",
         }
     },
     "ru": {
@@ -109,6 +114,11 @@ const translations = {
             "st_attempts" : "Попыток подключения",
             "submit_suceess" : "Успешно",
             "submit_fail" : "Ошибка",
+
+            "mqtt_enable" : "Использовать Mqtt",
+            "mqtt_server" : "Mqtt сервер",
+            "mqtt_user" : "Пользователь",
+            "mqtt_password" : "Пароль",
         }
     }
 };

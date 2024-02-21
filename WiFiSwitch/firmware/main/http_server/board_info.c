@@ -27,7 +27,7 @@
 #include "http_server.h"
 #include "board_info.h"
 
-#define MAX_BOARD_INFO_SZIE 512
+#define MAX_BOARD_INFO_SIZE 512
 
 static const char TAG[] = "board_info";
 
@@ -44,7 +44,11 @@ static const char BoardInfoTemplate[] = "{"\
 esp_err_t HTTP_GetBoardInfo(httpd_req_t *req)
 {
     esp_err_t aRetVal;
-    char aBuffer[MAX_BOARD_INFO_SZIE];
+    char* aBuffer = malloc(MAX_BOARD_INFO_SIZE);
+    if( aBuffer == NULL ){
+        ESP_LOGE(TAG,"Can't allocate memory for board info");
+        return ESP_ERR_NO_MEM;
+    }
     sprintf(aBuffer, BoardInfoTemplate, 
         BOARD_NAME,
         BOARD_HW_VERSION,
@@ -57,6 +61,6 @@ esp_err_t HTTP_GetBoardInfo(httpd_req_t *req)
     HTTPServer* aServer = (HTTPServer*)req->user_ctx;
     httpd_resp_send_chunk(req, aBuffer, strlen(aBuffer));    
     httpd_resp_send_chunk(req, NULL, 0);    
-
+    free(aBuffer);    
     return ESP_OK;
 }

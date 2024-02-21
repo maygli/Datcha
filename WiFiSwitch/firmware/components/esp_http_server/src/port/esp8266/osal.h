@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <esp_timer.h>
+#include <esp_log.h>
 
 #ifdef __cplusplus
 extern "C" {

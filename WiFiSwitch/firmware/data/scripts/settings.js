@@ -2,6 +2,7 @@ import {HttpProcessor} from "./http_processor.js"
 import { Translator } from "./translator.js"
 import {StackController} from "./controllers/stack_controller.js"
 import {PageController,ParametersPageController,FormPageController} from "./controllers/page_controller.js"
+import { MqttSettingsPageController } from "./settings_mqtt.js"
 import {SwitchSettingsPageController} from "./settings_switch.js"
 import {WiFiSettingsPageController} from "./settings_wifi.js"
 import {AboutPageController} from "./settings_about.js"
@@ -36,6 +37,10 @@ export async function onInit()
   let aPageWifiEl = document.querySelector("#page_wifi");
   let aWiFiPageController = new WiFiSettingsPageController(aPageWifiEl);
   aPagesStack.addPageController("menu_wifi",aWiFiPageController);
+
+  let aPageMqttEl = document.querySelector("#page_mqtt");
+  let aMqttPageController = new MqttSettingsPageController(aPageMqttEl);
+  aPagesStack.addPageController("menu_mqtt",aMqttPageController);
 
   let aPageUpgradeEl = document.querySelector("#page_upgrade");
   let aPageUpgradeController = new UpgradeController(aPageUpgradeEl);

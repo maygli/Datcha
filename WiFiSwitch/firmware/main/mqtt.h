@@ -22,25 +22,16 @@
 
 #pragma once
 
-typedef struct _MeteoData{
-    float   m_Temperature;
-    int     m_TemperatureIndex;
-    bool    m_IsTemperature;
-    float   m_Pressure;
-    int     m_PressureIndex;
-    bool    m_IsPressure;
-    float   m_Humidity;
-    int     m_HumidityIndex;
-    bool    m_IsHumidity;
-} MeteoData;
+#include <esp_err.h>
+
+#include "config.h"
+#include "http_server/http_server.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void Meteo_Init();
-void Meteo_Read();
-void Meteo_GetData(MeteoData* theData);
+void MQTT_AppStart( BoardConfig* theCfg );
 
 #ifdef __cplusplus
 }

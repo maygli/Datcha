@@ -40,6 +40,7 @@ typedef struct _SwitchConfig{
   uint8_t m_OffBrightness;
   bool    m_IsSoundOn;
   int     m_Style;
+  double  m_Limit;
 } SwitchConfig;
 
 void CFG_SwitchInit(SwitchConfig* theConfig);

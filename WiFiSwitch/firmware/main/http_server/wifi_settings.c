@@ -29,7 +29,7 @@
 #include "wifi_settings.h"
 #include "../config.h"
 
-#define MAX_WIFI_JSON_SIZE 768
+#define MAX_WIFI_JSON_SIZE 2048
 #define WIFI_SETTINGS_COMPLETE_DELAY 1000
 
 static const char TAG[] = "wifi_settings";
@@ -58,12 +58,17 @@ esp_err_t HTTP_SetWiFiSettings(httpd_req_t *req)
 
 esp_err_t HTTP_GetWiFiSettings(httpd_req_t *req)
 {
-    char aRes[MAX_WIFI_JSON_SIZE];
+    char aRes = malloc(MAX_WIFI_JSON_SIZE);
+    if( aRes == NULL ){
+        ESP_LOGE(TAG,"Can't allocate memory for wifi settings");
+        return ESP_ERR_NO_MEM;
+    }
     HTTPServer* aServer = (HTTPServer*)req->user_ctx;
     BoardConfig* aConfig = aServer->m_BoardConfig;
 
     CFG_WiFiGetSettingsString(&aConfig->m_WiFiConfig,aRes);
     httpd_resp_send_chunk(req, aRes, strlen(aRes));    
-    httpd_resp_send_chunk(req, NULL, 0);    
+    httpd_resp_send_chunk(req, NULL, 0);
+    free(aRes);    
     return ESP_OK;
 }
